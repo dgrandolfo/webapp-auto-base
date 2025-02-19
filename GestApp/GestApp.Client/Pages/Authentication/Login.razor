@@ -1,0 +1,111 @@
+﻿@page "/Login"
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+
+@if (showErrorAlert)
+{
+    <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))" >Invalid username or password!</MudAlert>
+}
+
+<MudForm @ref="_mudForm" Model="loginInfo" @bind-IsValid="@success" @bind-Errors="@errors">
+    <MudText GutterBottom="true" Align="Align.Left" Typo="Typo.h4">Log In</MudText>
+
+    <!-- Campo Email -->
+    <MudTextField @bind-Value="loginInfo.Email"
+    T="string"
+    Label="Email"
+    Required="true"
+    InputType="InputType.Email"
+    Variant="Variant.Outlined"
+    Class="my-6"
+    For="@(() => loginInfo.Email)" />
+
+    <!-- Campo Password -->
+    <MudTextField @bind-Value="loginInfo.Password"
+    T="string"
+    Label="Password"
+    Required="true"
+    InputType="InputType.Password"
+    Variant="Variant.Outlined"
+    Class="my-6"
+    For="@(() => loginInfo.Password)" />
+
+    <!-- Bottone di Submit -->
+    <MudButton Variant="Variant.Filled"
+    Color="Color.Primary"
+    FullWidth="true"
+    ButtonType="ButtonType.Submit"
+    Disabled="@(!success || _isLoading)"
+    Size="Size.Large"
+    OnClick="() => HandleSubmit()">
+        Log in
+    </MudButton>
+
+    <!-- Overlay di caricamento -->
+    <MudOverlay Visible="@_isLoading" DarkBackground>
+        <MudProgressCircular Indeterminate="true" Color="Color.Error" Size="Size.Large" Style="z-index: 1000;" />
+    </MudOverlay>
+</MudForm>
+
+@code {
+    private bool showErrorAlert = false;
+    string[] errors = { };
+    bool success;
+
+    private MudForm _mudForm;
+    private bool _isLoading = false;
+    private string errorMessage = string.Empty;
+
+    private LoginRequestDto loginInfo { get; set; } = new();
+
+    private async Task HandleSubmit()
+    {
+        _isLoading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            // Chiamata API al controller per il login
+            var response = await HttpClient.PostAsJsonAsync("api/account/login", loginInfo);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Se il login va a buon fine, leggiamo il token dalla risposta
+                var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+
+                // Qui puoi salvare il token (ad esempio, nel local storage o in un AuthenticationStateProvider custom)
+                // Esempio: await localStorage.SetItemAsync("authToken", result.Token);
+
+                // Dopo il login, reindirizza alla home o alla dashboard
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                // Gestione degli errori
+                errorMessage = "Credenziali non valide o errore durante il login.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoading = false;
+            success = false;
+        }
+    }
+
+    private void CloseMe(bool value)
+    {
+        if (value)
+        {
+            showErrorAlert = false;
+        }
+    }
+}

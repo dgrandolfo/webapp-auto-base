@@ -1,0 +1,11 @@
+{
+    "Settings": {
+        "BaseUri": "https://localhost:5000" // Change with your port here
+    },
+    "Jwt": {
+        "Key": "InsertSecretKey"
+    },
+    "ConnectionStrings": {
+        "DefaultConnection": "Server=localhost;Database=YourDb;User=YourUser;Password=YourPassword;TreatTinyAsBoolean=true"
+    }
+}

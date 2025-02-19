@@ -1,0 +1,36 @@
+# Cartelle build/output
+bin/
+obj/
+
+# Configurazioni di Visual Studio
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# File temporanei
+*.tmp
+*.log
+*.lock
+*.cache
+*.vs/
+
+# Dipendenze di sistema
+node_modules/
+dist/
+wwwroot/
+
+# File di pubblicazione
+*.publish/
+*.publishproj
+
+# Secrets locali (non condividere)
+local.appsettings.json
+appsettings.Development.json
+secrets.json
+.env
+
+# Cartelle Blazor WebAssembly
+**/wwwroot/build/
+**/wwwroot/framework/
