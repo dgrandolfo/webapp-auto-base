@@ -1,4 +1,6 @@
 ﻿@page "/Login"
+@layout LoginLayout
+@using GestApp.Client.Layout
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
 @inject HttpClient HttpClient
@@ -6,6 +8,14 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ISnackbar Snackbar
 
+
+<PageTitle>Log in</PageTitle>
+
+<MudIcon Icon="@Icons.Material.Rounded.Login" Size="Size.Large" Style="width:100px; height:100px;" />
+
+<br />
+<br />
+<br />
 
 @if (showErrorAlert)
 {
@@ -22,7 +32,6 @@
     Required="true"
     InputType="InputType.Email"
     Variant="Variant.Outlined"
-    Class="my-6"
     For="@(() => loginInfo.Email)" />
 
     <!-- Campo Password -->
@@ -32,7 +41,7 @@
     Required="true"
     InputType="InputType.Password"
     Variant="Variant.Outlined"
-    Class="my-6"
+    Class="mt-3 mb-6"
     For="@(() => loginInfo.Password)" />
 
     <!-- Bottone di Submit -->
@@ -83,7 +92,7 @@
                 // Esempio: await localStorage.SetItemAsync("authToken", result.Token);
 
                 // Dopo il login, reindirizza alla home o alla dashboard
-                // NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo("/");
             }
             else
             {
