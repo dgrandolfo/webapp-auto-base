@@ -20,4 +20,8 @@
     <ProjectReference Include="..\..\GestApp.Application\GestApp.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Pages\Account\" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,225 @@
+﻿@page "/Personal/Account"
+@using System.Text.RegularExpressions
+@using GestApp.Application.Models
+@using GestApp.Domain.Interfaces
+
+@* @inject IdentityUserAccessor IdentityUserAccessor
+@inject UserManager<ApplicationUser> UserManager *@
+@inject ISnackbar Snackbar
+@inject IBreadcrumbService BreadcrumbService
+
+@* @attribute [Authorize] *@
+
+@* <AuthorizeView> *@
+    @{
+        var fName = "Mario"; // context.User.FindFirst("FirstName").Value;
+        var lName = "Rossi"; // context.User.FindFirst("LastName").Value;
+        var jobTitle = "Admin"; // context.User.FindFirst("JobTitle").Value;
+        var email = "admin@gmail.com"; // context.User.Identity.Name;
+    }
+
+    <MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">Account</MudText>
+    <MudTabs Elevation="1" Rounded="true" PanelClass="mt-6">
+        <MudTabPanel Text="General">
+            <MudGrid>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudCard>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText>Profile</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <div class="d-flex justify-center mb-4">
+                                <MudAvatar Color="Color.Primary" Style="height:100px; width:100px;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Style="height:100px; width:100px;" />
+                                </MudAvatar>
+                            </div>
+                            <MudText Align="Align.Center">@userDetails.FirstName @userDetails.LastName</MudText>
+                            <MudText Align="Align.Center">@userDetails.Role</MudText>
+                        </MudCardContent>
+                        <MudCardActions Class="d-flex justify-center">
+                            <MudButton OnClick="DeletePicture" Color="@AvatarButtonColor">@AvatarButtonText</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="8" md="9">
+                    <MudCard>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText>Profile Details</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudGrid>
+
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="userDetails.FirstName" Label="First Name" Variant="Variant.Outlined" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="userDetails.LastName" Label="Last Name" Variant="Variant.Outlined" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="userDetails.Role" Label="Role" Variant="Variant.Outlined" Disabled="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="email" Label="Email" Variant="Variant.Outlined" HelperText="Dont worry, we shall not spam!" Disabled="true" InputType="InputType.Email" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                        <MudCardActions Class="pb-4 pl-4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" @onclick="@(() => SaveChanges("Profile details saved", Severity.Success))">Save Changes</MudButton>
+                        </MudCardActions>
+
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+        <MudTabPanel Text="Security">
+            <MudForm @ref="form">
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText>Change Password</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string" Label="Password" Variant="Variant.Outlined" InputType="InputType.Password" @ref="pwField1" Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true" RequiredError="Password is required!" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string" Label="Password Confirmation" Variant="Variant.Outlined" InputType="InputType.Password" Validation="@(new Func<string, string>(PasswordMatch))" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string" Label="Current Password" Variant="Variant.Outlined" InputType="InputType.Password" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                    <MudCardActions Class="pb-4 pl-4">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" @onclick="@(() => SaveChanges("Current Password is incorrect", Severity.Error))">Change Password</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudForm>
+        </MudTabPanel>
+    </MudTabs>
+@* </AuthorizeView> *@
+
+
+@code {
+    // [CascadingParameter]
+    // private HttpContext HttpContext { get; set; } = default!;
+
+    MudForm form;
+    MudTextField<string> pwField1;
+
+    public string AvatarImageLink { get; set; } = "images/avatar_jonny.jpg";
+    public string AvatarIcon { get; set; }
+    public string AvatarButtonText { get; set; } = "Delete Picture";
+    public Color AvatarButtonColor { get; set; } = Color.Error;
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string JobTitle { get; set; }
+    public string Email { get; set; }
+    public bool FriendSwitch { get; set; } = true;
+    public bool NotificationEmail_1 { get; set; } = true;
+    public bool NotificationEmail_2 { get; set; }
+    public bool NotificationEmail_3 { get; set; }
+    public bool NotificationEmail_4 { get; set; } = true;
+    public bool NotificationChat_1 { get; set; }
+    public bool NotificationChat_2 { get; set; } = true;
+    public bool NotificationChat_3 { get; set; } = true;
+    public bool NotificationChat_4 { get; set; }
+
+    // private UserUpdateModel model = new UserUpdateModel();
+
+
+    private UserCardModel userDetails = new UserCardModel();
+    protected async override Task OnInitializedAsync()
+    {
+        BreadcrumbService.SetBreadcrumb(new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Account", href: "/Personal/Account")
+        });
+
+        // var userId = await IdentityUserAccessor.GetRequiredUserAsync(HttpContext);
+
+        // var user = UserManager.FindByIdAsync(userId.Id);
+
+        // var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        // var user = authstate.User;
+        // var name = user.Identity.Name;
+
+
+        // Console.WriteLine("we got the name " + name);
+
+        // userDetails = await HttpClient.GetFromJsonAsync<UserDetails>($"api/account/userdetails/{name}");
+
+        //var test =  await HttpClient.GetAsync($"api/account/userdetails/{name}");
+        // var read = await test.Content.ReadFromJsonAsync<UserDetails>();
+        // Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(read));
+
+
+    }
+
+    void DeletePicture()
+    {
+        if (!String.IsNullOrEmpty(AvatarImageLink))
+        {
+            AvatarImageLink = null;
+            AvatarIcon = Icons.Material.Outlined.SentimentVeryDissatisfied;
+            AvatarButtonText = "Upload Picture";
+            AvatarButtonColor = Color.Primary;
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    async Task SaveChanges(string message, Severity severity)
+    {
+        // var json = System.Text.Json.JsonSerializer.Serialize(model);
+        // StringContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        // var result = await HttpClient.PatchAsync("api/account/patch", content);
+        // if (result.StatusCode == System.Net.HttpStatusCode.OK)
+        // {
+        //     Snackbar.Add(message, severity, config =>
+        //     {
+        //         config.ShowCloseIcon = false;
+        //     });
+
+        //     //StateHasChanged();
+        // }
+
+        // else
+        // {
+        //     //something went wrong
+        // }
+
+    }
+
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield return "Password is required!";
+            yield break;
+        }
+        if (pw.Length < 8)
+            yield return "Password must be at least of length 8";
+        if (!Regex.IsMatch(pw, @"[A-Z]"))
+            yield return "Password must contain at least one capital letter";
+        if (!Regex.IsMatch(pw, @"[a-z]"))
+            yield return "Password must contain at least one lowercase letter";
+        if (!Regex.IsMatch(pw, @"[0-9]"))
+            yield return "Password must contain at least one digit";
+    }
+
+    private string PasswordMatch(string arg)
+    {
+        if (pwField1.Value != arg)
+            return "Passwords don't match";
+        return null;
+    }
+} 
