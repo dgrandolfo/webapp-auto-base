@@ -8,6 +8,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using GestApp.Infrastructure.Configurations;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using GestApp.Application.Services;
+using GestApp.Domain.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,8 +37,13 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddCascadingAuthenticationState();
 
-// Aggiungi AutoMapper al container di dependency injection
+// Add AutoMapper service
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// Add custom services
+builder.Services.AddScoped<IBreadcrumbService, BreadcrumbService>();
+//builder.Services.AddScoped<ITransactionService, TransactionService>();
+//builder.Services.AddScoped<IUserService, UserService>();
 
 // Configura l’autenticazione JWT
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT key not found.");

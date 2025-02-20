@@ -62,6 +62,9 @@
 </MudForm>
 
 @code {
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
     private bool showErrorAlert = false;
     string[] errors = { };
     bool success;
@@ -86,10 +89,10 @@
             {
                 // Se il login va a buon fine, leggiamo il token dalla risposta
                 var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
-
-				Snackbar.Add("Login effettuato con successo!", Severity.Success);
                 // Qui puoi salvare il token (ad esempio, nel local storage o in un AuthenticationStateProvider custom)
                 // Esempio: await localStorage.SetItemAsync("authToken", result.Token);
+
+				Snackbar.Add("Login effettuato con successo!", Severity.Success);
 
                 // Dopo il login, reindirizza alla home o alla dashboard
                 NavigationManager.NavigateTo("/");

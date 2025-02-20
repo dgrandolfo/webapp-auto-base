@@ -1,0 +1,23 @@
+﻿@* TODO: Get user info as parameters and put them into fields (ex: Name+Surname, Role) *@
+
+<AuthorizeView>
+    <MudCard Elevation="0" Square="true" Class="@Class" Style="@Style">
+        <MudCardHeader>
+            <CardHeaderAvatar>
+                <MudAvatar Color="Color.Primary">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" />
+                </MudAvatar>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.body2">Mario Rossi</MudText>
+                <MudText Typo="Typo.caption">Admin</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+    </MudCard>
+</AuthorizeView>
+
+
+@code {
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? Style { get; set; }
+}
