@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <Folder Include="Pages\Account\" />
+    <Folder Include="Pages\Administration\" />
   </ItemGroup>
 
 </Project>
