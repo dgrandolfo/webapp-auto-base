@@ -1,4 +1,5 @@
 ﻿using GestApp.Application.DTOs;
+using GestApp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -12,14 +13,14 @@ namespace GestApp.Controllers;
 [Route("api/[controller]")]
 public class AccountController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IConfiguration _configuration;
 
-    public AccountController(UserManager<IdentityUser> userManager,
+    public AccountController(UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
-        SignInManager<IdentityUser> signInManager,
+        SignInManager<ApplicationUser> signInManager,
         IConfiguration configuration)
     {
         _userManager = userManager;
@@ -34,7 +35,7 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var user = new IdentityUser { UserName = model.Email, Email = model.Email };
+        var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
         var result = await _userManager.CreateAsync(user, model.Password);
         if (result.Succeeded)
         {
@@ -64,7 +65,7 @@ public class AccountController : ControllerBase
         return Unauthorized();
     }
 
-    private async Task<string> GenerateJwtTokenAsync(IdentityUser user)
+    private async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
     {
         var role = (await _userManager.GetRolesAsync(user)).First();
 

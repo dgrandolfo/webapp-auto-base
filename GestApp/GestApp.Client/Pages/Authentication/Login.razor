@@ -48,7 +48,7 @@
 
     <!-- Overlay di caricamento -->
     <MudOverlay Visible="@_isLoading" DarkBackground>
-        <MudProgressCircular Indeterminate="true" Color="Color.Error" Size="Size.Large" Style="z-index: 1000;" />
+        <MudProgressCircular Indeterminate="true" Color="Color.Default" Size="Size.Large" Style="z-index: 1000;" />
     </MudOverlay>
 </MudForm>
 
@@ -78,11 +78,12 @@
                 // Se il login va a buon fine, leggiamo il token dalla risposta
                 var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
 
+				Snackbar.Add("Login effettuato con successo!", Severity.Success);
                 // Qui puoi salvare il token (ad esempio, nel local storage o in un AuthenticationStateProvider custom)
                 // Esempio: await localStorage.SetItemAsync("authToken", result.Token);
 
                 // Dopo il login, reindirizza alla home o alla dashboard
-                NavigationManager.NavigateTo("/");
+                // NavigationManager.NavigateTo("/");
             }
             else
             {
