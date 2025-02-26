@@ -2,10 +2,6 @@
 using GestApp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace GestApp.Controllers;
 
@@ -49,46 +45,24 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequest)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        var user = await _userManager.FindByEmailAsync(loginRequest.Email);
-        if (user != null)
         {
-            var result = await _signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, false);
-            if (result.Succeeded)
-            {
-                var token = await GenerateJwtTokenAsync(user);
-                return Ok(new { Token = token });
-            }
+            return BadRequest(ModelState);
         }
 
-        return Unauthorized();
-    }
+        // Trova l'utente tramite email
+        var user = await _userManager.FindByEmailAsync(loginRequest.Email);
+        if (user == null)
+            return Unauthorized(new LoginResponseDto { Succeeded = true, Message = "Invalid email or password" });
 
-    private async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
-    {
-        var role = (await _userManager.GetRolesAsync(user)).First();
+        // Verifica la password
+        var result = await _signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, lockoutOnFailure: false);
+        if (result.Succeeded)
+        {
+            // Esegue il sign in e imposta il cookie di autenticazione
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            return Ok(new LoginResponseDto { Succeeded = true });
+        }
 
-        var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email!),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Role, role),
-            };
-
-        var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException($"{nameof(GenerateJwtTokenAsync)} - JWT key not found");
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddHours(1),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return Unauthorized(new LoginResponseDto { Succeeded = true, Message = "Invalid email or password" });
     }
 }

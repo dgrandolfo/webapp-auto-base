@@ -3,14 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using GestApp.Components;
 using GestApp.Infrastructure.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using GestApp.Infrastructure.Configurations;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using GestApp.Application.Services;
 using GestApp.Domain.Interfaces;
-using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,15 +25,13 @@ builder.Services.AddScoped<HttpClient>(sp =>
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
-// Add Blazored service
-builder.Services.AddBlazoredLocalStorage();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents()
-    .AddAuthenticationStateSerialization();
-
+    .AddAuthenticationStateSerialization(
+        options => options.SerializeAllClaims = true);
 builder.Services.AddCascadingAuthenticationState();
 
 // Add AutoMapper service
@@ -48,62 +42,14 @@ builder.Services.AddScoped<IBreadcrumbService, BreadcrumbService>();
 //builder.Services.AddScoped<ITransactionService, TransactionService>();
 //builder.Services.AddScoped<IUserService, UserService>();
 
-// Configura l’autenticazione JWT
-var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT key not found.");
-
+// Configura l’autenticazione tramite cookie (Identity)
 builder.Services.AddAuthentication(options =>
 {
-    // Utilizziamo un policy scheme per scegliere tra Cookie e JWT
-    options.DefaultScheme = "HybridScheme";
+    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ApplicationScheme;
 })
-.AddPolicyScheme("HybridScheme", "JWT or Cookie", options =>
-{
-    options.ForwardDefaultSelector = context =>
-    {
-        // Se la richiesta contiene un header "Authorization" che inizia con "Bearer", usiamo JWT
-        var authHeader = context.Request.Headers["Authorization"].ToString();
-        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
-        {
-            return JwtBearerDefaults.AuthenticationScheme;
-        }
-        // Altrimenti usiamo il cookie (tipico per pagine UI)
-        return CookieAuthenticationDefaults.AuthenticationScheme;
-    };
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-    };
-
-    // Se desideri intercettare il challenge per JWT, puoi fare così:
-    options.Events = new JwtBearerEvents
-    {
-        OnChallenge = context =>
-        {
-            // Se il percorso richiesto inizia con /api, restituisce 401
-            if (context.Request.Path.StartsWithSegments("/api"))
-            {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            }
-            else
-            {
-                // Altrimenti reindirizza a /Login (per UI basata su cookie)
-                context.Response.Redirect("/Login");
-            }
-            context.HandleResponse();
-            return Task.CompletedTask;
-        }
-    };
-})
-.AddCookie(options =>
+.AddCookie(IdentityConstants.ApplicationScheme, options =>
 {
     options.LoginPath = "/Login";
     options.AccessDeniedPath = "/Access-Denied";
@@ -117,6 +63,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Configura Identity
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -146,7 +93,11 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseAntiforgery();
+// Applica l’antiforgery solo per le richieste non API (se necessario)
+app.UseWhen(context => !context.Request.Path.StartsWithSegments("/api"), appBuilder =>
+{
+    appBuilder.UseAntiforgery();
+});
 
 app.MapControllers();
 

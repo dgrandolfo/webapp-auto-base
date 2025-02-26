@@ -3,12 +3,9 @@
 @using GestApp.Client.Layout
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
-@using Blazored.LocalStorage
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
-@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ISnackbar Snackbar
-@inject ILocalStorageService LocalStorage
 
 
 <PageTitle>Log in</PageTitle>
@@ -93,21 +90,26 @@
             {
                 // Se il login va a buon fine, leggiamo il token dalla risposta
                 var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
-                // Qui puoi salvare il token (ad esempio, nel local storage o in un AuthenticationStateProvider custom)
-                await LocalStorage.SetItemAsync("authToken", result.Token);
 
-                var token = await LocalStorage.GetItemAsync<string>("authToken");
+                if (result is not null && result.Succeeded)
+                {
+                    Snackbar.Add("Login effettuato con successo!", Severity.Success);
 
-				Snackbar.Add("Login effettuato con successo!", Severity.Success);
-
-                // Dopo il login, reindirizza alla home o alla dashboard
-                NavigationManager.NavigateTo("/");
+                    // Dopo il login, reindirizza alla home o alla dashboard
+                    NavigationManager.NavigateTo("/", forceLoad: true);
+                }
+                else {
+                    // Gestione degli errori
+                    showErrorAlert = true;
+                    errorMessage = result.Message ?? "Invalid email or password.";
+                    Snackbar.Add("Invalid login!", Severity.Error);
+                }
             }
             else
             {
                 // Gestione degli errori
                 showErrorAlert = true;
-                errorMessage = "Credenziali non valide o errore durante il login.";
+                errorMessage = "Invalid email or password.";
             }
         }
         catch (Exception ex)
