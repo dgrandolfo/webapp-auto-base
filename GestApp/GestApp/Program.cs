@@ -10,6 +10,7 @@ using GestApp.Infrastructure.Configurations;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using GestApp.Application.Services;
 using GestApp.Domain.Interfaces;
+using Blazored.LocalStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ builder.Services.AddScoped<HttpClient>(sp =>
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
+// Add Blazored service
+builder.Services.AddBlazoredLocalStorage();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -85,9 +88,16 @@ builder.Services.AddAuthentication(options =>
     {
         OnChallenge = context =>
         {
-            // Intercetta la challenge e reindirizza verso /Login
-            // Attenzione: questo comportamento potrebbe non essere ideale per chiamate API
-            context.Response.Redirect("/Login");
+            // Se il percorso richiesto inizia con /api, restituisce 401
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            }
+            else
+            {
+                // Altrimenti reindirizza a /Login (per UI basata su cookie)
+                context.Response.Redirect("/Login");
+            }
             context.HandleResponse();
             return Task.CompletedTask;
         }

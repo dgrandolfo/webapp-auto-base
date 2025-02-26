@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 
@@ -11,6 +12,8 @@ builder.Services.AddScoped(sp =>
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
+// Add Blazored service
+builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();

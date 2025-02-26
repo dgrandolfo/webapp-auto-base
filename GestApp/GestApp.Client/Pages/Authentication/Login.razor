@@ -3,10 +3,12 @@
 @using GestApp.Client.Layout
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
+@using Blazored.LocalStorage
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ISnackbar Snackbar
+@inject ILocalStorageService LocalStorage
 
 
 <PageTitle>Log in</PageTitle>
@@ -19,7 +21,9 @@
 
 @if (showErrorAlert)
 {
-    <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))" >Invalid username or password!</MudAlert>
+    <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">
+        @errorMessage
+    </MudAlert>
 }
 
 <MudForm @ref="_mudForm" Model="loginInfo" @bind-IsValid="@success" @bind-Errors="@errors">
@@ -90,7 +94,9 @@
                 // Se il login va a buon fine, leggiamo il token dalla risposta
                 var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
                 // Qui puoi salvare il token (ad esempio, nel local storage o in un AuthenticationStateProvider custom)
-                // Esempio: await localStorage.SetItemAsync("authToken", result.Token);
+                await LocalStorage.SetItemAsync("authToken", result.Token);
+
+                var token = await LocalStorage.GetItemAsync<string>("authToken");
 
 				Snackbar.Add("Login effettuato con successo!", Severity.Success);
 
@@ -100,6 +106,7 @@
             else
             {
                 // Gestione degli errori
+                showErrorAlert = true;
                 errorMessage = "Credenziali non valide o errore durante il login.";
             }
         }
