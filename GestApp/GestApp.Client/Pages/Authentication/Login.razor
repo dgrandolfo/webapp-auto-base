@@ -83,7 +83,7 @@
         try
         {
             // Chiamata API al controller per il login
-            var response = await HttpClient.PostAsJsonAsync("api/account/login", loginInfo);
+            var response = await HttpClient.PostAsJsonAsync("api/authentication/login", loginInfo);
 
             if (response.IsSuccessStatusCode)
             {

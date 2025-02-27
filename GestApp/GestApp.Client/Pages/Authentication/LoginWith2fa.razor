@@ -77,7 +77,7 @@
                 TwoFactorCode = Input.TwoFactorCode!
             };
 
-            var response = await HttpClient.PostAsJsonAsync("api/account/2fa", twoFactorDto);
+            var response = await HttpClient.PostAsJsonAsync("api/authentication/2fa", twoFactorDto);
             if (response.IsSuccessStatusCode)
             {
                 await Task.Delay(500);

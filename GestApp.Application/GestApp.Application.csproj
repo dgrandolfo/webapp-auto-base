@@ -10,16 +10,13 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="MudBlazor" Version="8.2.0" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GestApp.Domain\GestApp.Domain.csproj" />
     <ProjectReference Include="..\GestApp.Infrastructure\GestApp.Infrastructure.csproj" />
     <ProjectReference Include="..\GestApp.Models\GestApp.Models.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

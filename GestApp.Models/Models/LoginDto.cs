@@ -14,6 +14,7 @@ public class LoginResponseDto
     public bool Succeeded { get; set; }
     public bool RequiresTwoFactor { get; set; }
     public string Message { get; set; } = string.Empty;
+    public bool IsLockedOut { get; set; }
 }
 
 public class TwoFactorLoginRequestDto

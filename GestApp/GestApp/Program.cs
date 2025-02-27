@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using GestApp.Components;
 using GestApp.Infrastructure.Data;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using GestApp.Application.Configurations;
-using GestApp.Client.Services;
+using GestApp.Application.Services.Interfaces;
+using GestApp.Application.Services;
 using GestApp.Client.Services.Interfaces;
+using GestApp.Client.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,8 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Add custom services
 builder.Services.AddScoped<IBreadcrumbService, BreadcrumbService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IUserService, UserService>();
 //builder.Services.AddScoped<ITransactionService, TransactionService>();
 //builder.Services.AddScoped<IUserService, UserService>();
 
