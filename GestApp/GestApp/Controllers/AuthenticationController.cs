@@ -1,6 +1,7 @@
 ﻿using GestApp.Application.Services.Interfaces;
 using GestApp.Models.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GestApp.Controllers
@@ -86,13 +87,32 @@ namespace GestApp.Controllers
         {
             try
             {
-                var dto = await _authService.GetAuthenticatorSetupDataAsync(User);
-                return Ok(dto);
+                var result = await _authService.GetAuthenticatorSetupDataAsync(User);
+                return Ok(result);
             }
             catch (Exception ex)
             {
                 return Unauthorized(new { message = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Verifica il codice di autenticazione a due fattori e abilita il 2FA per l'utente corrente.
+        /// </summary>
+        /// <param name="dto">Il DTO contenente il codice di verifica.</param>
+        /// <returns>
+        /// Un oggetto <see cref="TwoFactorVerificationResponseDto"/> con l'esito della verifica e, se applicabile, i codici di recupero.
+        /// </returns>
+        [Authorize]
+        [HttpGet("2fa/verify")]
+        public async Task<IActionResult> VerifyTwoFactor([FromQuery] string code)
+        {
+            var result = await _authService.VerifyTwoFactorAsync(code, User);
+            if (result.Succeeded)
+            {
+                return Ok(result);
+            }
+            return Unauthorized(result);
         }
     }
 }

@@ -31,4 +31,13 @@ public interface IAuthenticationService
     /// <param name="userPrincipal">Il claims principal dell'utente corrente.</param>
     /// <returns>Un <see cref="AuthenticatorSetupDto"/> contenente i dati per configurare l'autenticatore.</returns>
     Task<AuthenticatorSetupDto> GetAuthenticatorSetupDataAsync(ClaimsPrincipal userPrincipal);
+    /// <summary>
+    /// Verifica il codice di autenticazione a due fattori e abilita il 2FA per l'utente corrente.
+    /// </summary>
+    /// <param name="dto">Il DTO contenente il codice di verifica inviato dal client.</param>
+    /// <param name="user">Il ClaimsPrincipal dell'utente corrente.</param>
+    /// <returns>
+    /// Un oggetto <see cref="TwoFactorVerificationResponseDto"/> che indica l'esito della verifica e contiene, se generati, i codici di recupero.
+    /// </returns>
+    Task<TwoFactorLoginResponseDto> VerifyTwoFactorAsync(string code, ClaimsPrincipal user);
 }

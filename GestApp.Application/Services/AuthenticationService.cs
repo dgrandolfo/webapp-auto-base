@@ -119,6 +119,60 @@ public class AuthenticationService : IAuthenticationService
         };
     }
 
+    /// <inheritdoc />
+    public async Task<TwoFactorLoginResponseDto> VerifyTwoFactorAsync(string code, ClaimsPrincipal user)
+    {
+        var currentUser = await _userManager.GetUserAsync(user);
+        if (currentUser == null)
+        {
+            return new TwoFactorLoginResponseDto
+            {
+                Succeeded = false,
+                Message = "User not found."
+            };
+        }
+
+        // Rimuove spazi e trattini dal codice inserito
+        var verificationCode = code.Replace(" ", string.Empty).Replace("-", string.Empty);
+        var isValid = await _userManager.VerifyTwoFactorTokenAsync(
+            currentUser,
+            _userManager.Options.Tokens.AuthenticatorTokenProvider,
+            verificationCode);
+
+        if (!isValid)
+        {
+            return new TwoFactorLoginResponseDto
+            {
+                Succeeded = false,
+                Message = "Error: Verification code is invalid."
+            };
+        }
+
+        await _userManager.SetTwoFactorEnabledAsync(currentUser, true);
+        var userId = await _userManager.GetUserIdAsync(currentUser);
+        //_logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
+
+        string message = "Your authenticator app has been verified.";
+        IEnumerable<string>? recoveryCodes = null;
+
+        if (await _userManager.CountRecoveryCodesAsync(currentUser) == 0)
+        {
+            recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(currentUser, 10);
+            message = "2FA activated!";
+        }
+        else
+        {
+            message = "2FA successfully activated!";
+        }
+
+        return new TwoFactorLoginResponseDto
+        {
+            Succeeded = true,
+            Message = message,
+            RecoveryCodes = recoveryCodes
+        };
+    }
+
     /// <summary>
     /// Formatta una chiave non formattata per renderla più leggibile.
     /// </summary>

@@ -22,3 +22,10 @@ public class TwoFactorLoginRequestDto
     [Required(ErrorMessage = "Authenticator code is required.")]
     public string TwoFactorCode { get; set; } = string.Empty;
 }
+
+public class TwoFactorLoginResponseDto
+{
+    public bool Succeeded { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public IEnumerable<string>? RecoveryCodes { get; set; } = new List<string>();
+}
