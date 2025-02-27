@@ -23,7 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GestApp.Application\GestApp.Application.csproj" />
     <ProjectReference Include="..\GestApp.Domain\GestApp.Domain.csproj" />
   </ItemGroup>
 	

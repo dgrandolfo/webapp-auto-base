@@ -1,4 +1,4 @@
-﻿using GestApp.Application.DTOs;
+﻿using GestApp.Models.Models;
 using GestApp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

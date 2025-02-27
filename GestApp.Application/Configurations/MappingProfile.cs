@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using GestApp.Application.DTOs;
+using GestApp.Models.Models;
 using GestApp.Infrastructure.Data;
 
-namespace GestApp.Infrastructure.Configurations;
+namespace GestApp.Application.Configurations;
 
 public class MappingProfile : Profile
 {

@@ -1,7 +1,7 @@
-﻿using GestApp.Domain.Interfaces;
+﻿using GestApp.Client.Services.Interfaces;
 using MudBlazor;
 
-namespace GestApp.Application.Services;
+namespace GestApp.Client.Services;
 
 public class BreadcrumbService : IBreadcrumbService
 {

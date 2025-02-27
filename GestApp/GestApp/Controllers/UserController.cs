@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using GestApp.Infrastructure.Data;
-using GestApp.Application.DTOs;
+using GestApp.Models.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 

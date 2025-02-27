@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GestApp.Application.DTOs;
+namespace GestApp.Models.Models;
 
 public class UserDto
 {

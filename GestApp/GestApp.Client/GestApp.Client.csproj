@@ -17,11 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\GestApp.Application\GestApp.Application.csproj" />
+    <Folder Include="Pages\Administration\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Pages\Administration\" />
+    <ProjectReference Include="..\..\GestApp.Models\GestApp.Models.csproj" />
   </ItemGroup>
 
 </Project>

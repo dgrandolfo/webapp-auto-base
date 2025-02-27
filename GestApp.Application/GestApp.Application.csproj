@@ -14,6 +14,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GestApp.Domain\GestApp.Domain.csproj" />
+    <ProjectReference Include="..\GestApp.Infrastructure\GestApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\GestApp.Models\GestApp.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

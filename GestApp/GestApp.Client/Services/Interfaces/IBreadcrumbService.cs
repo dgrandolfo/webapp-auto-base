@@ -1,6 +1,6 @@
 ﻿using MudBlazor;
 
-namespace GestApp.Domain.Interfaces;
+namespace GestApp.Client.Services.Interfaces;
 
 public interface IBreadcrumbService
 {

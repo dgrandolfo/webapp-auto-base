@@ -1,5 +1,5 @@
-using GestApp.Application.Services;
-using GestApp.Domain.Interfaces;
+using GestApp.Client.Services;
+using GestApp.Client.Services.Interfaces;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 

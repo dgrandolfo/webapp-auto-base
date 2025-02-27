@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using GestApp.Components;
 using GestApp.Infrastructure.Data;
-using GestApp.Infrastructure.Configurations;
-using GestApp.Application.Services;
-using GestApp.Domain.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using GestApp.Application.Configurations;
+using GestApp.Client.Services;
+using GestApp.Client.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
