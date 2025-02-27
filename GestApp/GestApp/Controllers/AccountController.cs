@@ -2,6 +2,13 @@
 using GestApp.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
+using System.Text.Encodings.Web;
+using System.Text;
+using QRCoder;
+using Microsoft.Extensions.Options;
+using GestApp.Application.Configurations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestApp.Controllers;
 
@@ -12,16 +19,22 @@ public class AccountController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly UrlEncoder _urlEncoder;
+    private readonly IOptions<Settings> _options;
     private readonly IConfiguration _configuration;
 
     public AccountController(UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         SignInManager<ApplicationUser> signInManager,
+        UrlEncoder urlEncoder,
+        IOptions<Settings> options,
         IConfiguration configuration)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _signInManager = signInManager;
+        _urlEncoder = urlEncoder;
+        _options = options;
         _configuration = configuration;
     }
 
@@ -107,5 +120,82 @@ public class AccountController : ControllerBase
             return StatusCode(StatusCodes.Status423Locked, new { message = "User account locked out." });
         }
         return Unauthorized(new { message = "Invalid authenticator code." });
+    }
+
+    //[Authorize]
+    [HttpGet("2fa/setup")]
+    public async Task<IActionResult> GetAuthenticatorSetupData()
+    {
+        // Recupera l'utente corrente
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+            return Unauthorized("User not found.");
+
+        // Ottiene la chiave non formattata per l'autenticatore
+        var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
+        if (string.IsNullOrEmpty(unformattedKey))
+        {
+            await _userManager.ResetAuthenticatorKeyAsync(user);
+            unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
+        }
+
+        // Format key per renderla più leggibile
+        var sharedKey = FormatKey(unformattedKey);
+
+        // Recupera l'email
+        var email = await _userManager.GetEmailAsync(user);
+
+        // Genera l'URI per il QR code
+        var authenticatorUri = GenerateQrCodeUri(email ?? "user@example.com", unformattedKey);
+
+        // Genera il QR code (in formato data:image/png;base64)
+        var qrCodeImage = GenerateQrCode(authenticatorUri);
+
+        var dto = new AuthenticatorSetupDto
+        {
+            SharedKey = sharedKey,
+            AuthenticatorUri = authenticatorUri,
+            QrCodeImage = qrCodeImage
+        };
+
+        return Ok(dto);
+    }
+
+    private string FormatKey(string unformattedKey)
+    {
+        var result = new StringBuilder();
+        int currentPosition = 0;
+        while (currentPosition + 4 < unformattedKey.Length)
+        {
+            result.Append(unformattedKey.AsSpan(currentPosition, 4)).Append(' ');
+            currentPosition += 4;
+        }
+        if (currentPosition < unformattedKey.Length)
+        {
+            result.Append(unformattedKey.AsSpan(currentPosition));
+        }
+        return result.ToString().ToLowerInvariant();
+    }
+
+    private string GenerateQrCodeUri(string email, string unformattedKey)
+    {
+        // Recupera il nome dell'app da appsettings.json
+        string platformName = _options.Value.AppName;
+
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&algorithm=SHA1&digits=6&period=30",
+            _urlEncoder.Encode(platformName),
+            _urlEncoder.Encode(email),
+            unformattedKey);
+    }
+
+    private string GenerateQrCode(string uri)
+    {
+        using var qrGenerator = new QRCodeGenerator();
+        using var qrCodeData = qrGenerator.CreateQrCode(uri, QRCodeGenerator.ECCLevel.Q);
+        using var qrCode = new PngByteQRCode(qrCodeData);
+        byte[] qrCodeBytes = qrCode.GetGraphic(20);
+        return $"data:image/png;base64,{Convert.ToBase64String(qrCodeBytes)}";
     }
 }

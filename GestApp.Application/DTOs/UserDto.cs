@@ -9,7 +9,7 @@ public class UserDto
     public string FiscalCode { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? Role { get; set; }
-
+    public bool? TwoFactorEnabled { get; set; }
     public DateTime? CreatedAt { get; set; }
 }
 
@@ -42,13 +42,26 @@ public class UserCreateDto
     public string Role { get; set; } = string.Empty;
 }
 
-public class UserLoginDto
+public class UserUpdateDto
 {
-    [Required(ErrorMessage = "Email is required")]
-    [EmailAddress(ErrorMessage = "Invalid email address")]
+    [Required(ErrorMessage = "Name is required.")]
+    public string Name { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Surname is required.")]
+    public string Surname { get; set; } = string.Empty;
+    [EmailAddress(ErrorMessage = "Invalid email address.")]
     public string Email { get; set; } = string.Empty;
+}
 
-    [Required]
-    [DataType(DataType.Password, ErrorMessage = "Password too weak")]
-    public string Password { get; set; } = string.Empty;
+public class UserResponseDto
+{
+    public bool Succeeded { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public UserDto? User { get; set; }
+}
+
+public class AuthenticatorSetupDto
+{
+    public string SharedKey { get; set; } = string.Empty;
+    public string AuthenticatorUri { get; set; } = string.Empty;
+    public string QrCodeImage { get; set; } = string.Empty;
 }

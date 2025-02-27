@@ -24,34 +24,34 @@
 
     <!-- Campo Email -->
     <MudTextField @bind-Value="loginInfo.Email"
-                  T="string"
-                  Label="Email"
-                  Required="true"
-                  InputType="InputType.Email"
-                  Variant="Variant.Outlined"
-                  For="@(() => loginInfo.Email)" />
+    T="string"
+    Label="Email"
+    Required="true"
+    InputType="InputType.Email"
+    Variant="Variant.Outlined"
+    For="@(() => loginInfo.Email)" />
 
     <!-- Campo Password -->
     <MudTextField @bind-Value="loginInfo.Password"
-                  T="string"
-                  Label="Password"
-                  Required="true"
-                  InputType="InputType.Password"
-                  Variant="Variant.Outlined"
-                  Class="mt-3 mb-6"
-                  For="@(() => loginInfo.Password)" />
+    T="string"
+    Label="Password"
+    Required="true"
+    InputType="InputType.Password"
+    Variant="Variant.Outlined"
+    Class="mt-3 mb-6"
+    For="@(() => loginInfo.Password)" />
 
     <!-- Checkbox per Remember Me -->
     @* <MudCheckBox @bind-Checked="loginInfo.RememberMe" Label="Remember me" Class="mb-3" /> *@
 
     <!-- Bottone di Submit -->
     <MudButton Variant="Variant.Filled"
-               Color="Color.Primary"
-               FullWidth="true"
-               ButtonType="ButtonType.Submit"
-               Disabled="@(!success || _isLoading)"
-               Size="Size.Large"
-               OnClick="() => HandleSubmit()">
+    Color="Color.Primary"
+    FullWidth="true"
+    ButtonType="ButtonType.Submit"
+    Disabled="@(!success || _isLoading)"
+    Size="Size.Large"
+    OnClick="() => HandleSubmit()">
         Log in
     </MudButton>
 
@@ -96,10 +96,12 @@
                     {
                         // Se l'utente ha il 2FA attivo, reindirizza a LoginWith2fa
                         var twoFactorUrl = $"/LoginWith2fa?ReturnUrl={Uri.EscapeDataString(ReturnUrl ?? "/")}";
+                        await Task.Delay(500);
                         NavigationManager.NavigateTo(twoFactorUrl, forceLoad: true);
                     }
                     else
                     {
+                        await Task.Delay(500);
                         NavigationManager.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
                     }
                 }

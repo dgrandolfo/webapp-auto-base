@@ -9,46 +9,51 @@
 
 <PageTitle>Log in</PageTitle>
 
-<MudText Typo="Typo.h4" Class="mb-2">Two-factor authentication</MudText>
-<MudDivider Class="mb-4" />
+<MudIcon Icon="@Icons.Material.Rounded.Lock" Size="Size.Large" Style="width:100px; height:100px;" />
+
+<br /><br /><br />
 
 @if (showErrorAlert)
 {
-    <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center"
-              ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">
+    <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">
         @errorMessage
     </MudAlert>
 }
 
-<MudText Class="mb-4">
-    Your login is protected with an authenticator app. Enter your authenticator code below.
-</MudText>
+<MudForm @ref="mudForm" Model="Input" @bind-IsValid="@success" @bind-Errors="@errors">
+    <MudText Typo="Typo.h4" Class="mb-2">2FA</MudText>
+    <MudText Class="mb-4">
+        Your login is protected with an authenticator app. Enter your authenticator code below.
+    </MudText>
 
-<MudForm @ref="mudForm" Model="Input" OnValidSubmit="OnValidSubmitAsync">
     <MudTextField @bind-Value="Input.TwoFactorCode" 
                   Label="Authenticator code" 
-                  For="@(() => Input.TwoFactorCode)" 
+                  For="@(() => Input.TwoFactorCode)"
+                  InputType="InputType.Number"
                   Required="true" 
                   Immediate="true" 
-                  Class="mb-4" />
+                  Class="mb-6" />
 
-    @* <MudCheckBox @bind-Checked="Input.RememberMachine" Label="Remember this machine" Class="mb-4" /> *@
-
-    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isSubmitting">
-        Log in
+    <MudButton ButtonType="ButtonType.Submit" 
+    Variant="Variant.Filled" 
+    Color="Color.Primary"
+    Disabled="@(!success || _isLoading)"
+    OnClick="() => HandleSubmit()">
+        Send
     </MudButton>
 </MudForm>
 
-@* <MudText Class="mt-4">
-    Don't have access to your authenticator device? You can
-    <MudLink Href="Account/LoginWithRecoveryCode?ReturnUrl=@ReturnUrl" Color="Color.Primary">
-        log in with a recovery code
-    </MudLink>.
-</MudText> *@
+<!-- Overlay di caricamento -->
+<MudOverlay Visible="@_isLoading" DarkBackground>
+    <MudProgressCircular Indeterminate="true" Color="Color.Default" Size="Size.Large" Style="z-index: 1000;" />
+</MudOverlay>
 
 @code {
     private MudForm mudForm;
-    private bool _isSubmitting;
+    private bool _isLoading;
+
+    private bool success;
+    private string[] errors = { };
     private bool showErrorAlert;
     private string errorMessage = string.Empty;
 
@@ -59,39 +64,43 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    [SupplyParameterFromQuery]
-    private bool RememberMe { get; set; }
-
-    private async Task OnValidSubmitAsync()
+    private async Task HandleSubmit()
     {
-        _isSubmitting = true;
-        await mudForm.Validate();
-        if (!mudForm.IsValid)
-        {
-            _isSubmitting = false;
-            return;
-        }
+        _isLoading = true;
+        errorMessage = string.Empty;
 
-        // Costruisci il DTO da inviare all'API
-        var twoFactorDto = new TwoFactorLoginRequestDto
+        try 
         {
-            TwoFactorCode = Input.TwoFactorCode!
-        };
+            // Costruisci il DTO da inviare all'API
+            var twoFactorDto = new TwoFactorLoginRequestDto
+            {
+                TwoFactorCode = Input.TwoFactorCode!
+            };
 
-        var response = await HttpClient.PostAsJsonAsync("api/account/2fa", twoFactorDto);
-        if (response.IsSuccessStatusCode)
-        {
-            // Login 2FA effettuato, reindirizza alla pagina di destinazione
-            NavigationManager.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
+            var response = await HttpClient.PostAsJsonAsync("api/account/2fa", twoFactorDto);
+            if (response.IsSuccessStatusCode)
+            {
+                await Task.Delay(500);
+                // Login 2FA effettuato, reindirizza alla pagina di destinazione
+                NavigationManager.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
+            }
+            else
+            {
+                // Gestione errore: mostra il messaggio restituito dall'API
+                var errorResponse = await response.Content.ReadFromJsonAsync<ApiErrorResponseDto>();
+                errorMessage = errorResponse?.Message ?? "Unknown error.";
+                showErrorAlert = true;
+            }
         }
-        else
+        catch (Exception ex)
         {
-            // Gestione errore: mostra il messaggio restituito dall'API
-            var errorResponse = await response.Content.ReadFromJsonAsync<ApiErrorResponseDto>();
-            errorMessage = errorResponse?.Message ?? "Unknown error.";
-            showErrorAlert = true;
+            errorMessage = ex.Message;
         }
-        _isSubmitting = false;
+        finally
+        {
+            _isLoading = false;
+            success = false;
+        }
     }
 
     private void CloseMe(bool value)
