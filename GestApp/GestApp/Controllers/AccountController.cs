@@ -49,12 +49,22 @@ public class AccountController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        // Trova l'utente tramite email
         var user = await _userManager.FindByEmailAsync(loginRequest.Email);
         if (user == null)
-            return Unauthorized(new LoginResponseDto { Succeeded = true, Message = "Invalid email or password" });
+        {
+            return Unauthorized(new LoginResponseDto { Succeeded = false, Message = "Invalid email or password." });
+        }
 
-        // Verifica la password
+        // Controlla direttamente la proprietà TwoFactorEnabled
+        if (user.TwoFactorEnabled)
+        {
+            // Esegui il login parziale per abilitare il flusso 2FA.
+            // Questo serve per impostare il contesto del 2FA.
+            await _signInManager.PasswordSignInAsync(user, loginRequest.Password, false, lockoutOnFailure: false);
+            return Ok(new LoginResponseDto { Succeeded = true, RequiresTwoFactor = true });
+        }
+
+        // Login normale se il 2FA non è abilitato
         var result = await _signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, lockoutOnFailure: false);
         if (result.Succeeded)
         {
@@ -62,7 +72,40 @@ public class AccountController : ControllerBase
             await _signInManager.SignInAsync(user, isPersistent: false);
             return Ok(new LoginResponseDto { Succeeded = true });
         }
+        else
+        {
+            return Unauthorized(new LoginResponseDto { Succeeded = false, Message = "Invalid email or password." });
+        }
+    }
 
-        return Unauthorized(new LoginResponseDto { Succeeded = true, Message = "Invalid email or password" });
+
+    [HttpPost("2fa")]
+    public async Task<IActionResult> TwoFactorLogin([FromBody] TwoFactorLoginRequestDto model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        // Recupera l'utente in fase di 2FA
+        var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+        if (user == null)
+        {
+            return Unauthorized(new { message = "Unable to load two-factor authentication user." });
+        }
+
+        // Normalizza il codice (rimuove spazi e trattini)
+        var code = model.TwoFactorCode?.Replace(" ", string.Empty).Replace("-", string.Empty);
+
+        var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(code!, false, false);
+        if (result.Succeeded)
+        {
+            return Ok(new { message = "Two-factor authentication successful." });
+        }
+        if (result.IsLockedOut)
+        {
+            return StatusCode(StatusCodes.Status423Locked, new { message = "User account locked out." });
+        }
+        return Unauthorized(new { message = "Invalid authenticator code." });
     }
 }

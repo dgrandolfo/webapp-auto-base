@@ -17,5 +17,12 @@ public class LoginRequestDto
 public class LoginResponseDto
 {
     public bool Succeeded { get; set; }
+    public bool RequiresTwoFactor { get; set; }
     public string Message { get; set; } = string.Empty;
+}
+
+public class TwoFactorLoginRequestDto
+{
+    [Required(ErrorMessage = "Authenticator code is required.")]
+    public string TwoFactorCode { get; set; } = string.Empty;
 }

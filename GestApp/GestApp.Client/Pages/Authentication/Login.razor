@@ -1,20 +1,16 @@
 ﻿@page "/Login"
 @layout LoginLayout
 @using GestApp.Client.Layout
-@using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
-
 <PageTitle>Log in</PageTitle>
 
 <MudIcon Icon="@Icons.Material.Rounded.Login" Size="Size.Large" Style="width:100px; height:100px;" />
 
-<br />
-<br />
-<br />
+<br /><br /><br />
 
 @if (showErrorAlert)
 {
@@ -28,31 +24,34 @@
 
     <!-- Campo Email -->
     <MudTextField @bind-Value="loginInfo.Email"
-    T="string"
-    Label="Email"
-    Required="true"
-    InputType="InputType.Email"
-    Variant="Variant.Outlined"
-    For="@(() => loginInfo.Email)" />
+                  T="string"
+                  Label="Email"
+                  Required="true"
+                  InputType="InputType.Email"
+                  Variant="Variant.Outlined"
+                  For="@(() => loginInfo.Email)" />
 
     <!-- Campo Password -->
     <MudTextField @bind-Value="loginInfo.Password"
-    T="string"
-    Label="Password"
-    Required="true"
-    InputType="InputType.Password"
-    Variant="Variant.Outlined"
-    Class="mt-3 mb-6"
-    For="@(() => loginInfo.Password)" />
+                  T="string"
+                  Label="Password"
+                  Required="true"
+                  InputType="InputType.Password"
+                  Variant="Variant.Outlined"
+                  Class="mt-3 mb-6"
+                  For="@(() => loginInfo.Password)" />
+
+    <!-- Checkbox per Remember Me -->
+    @* <MudCheckBox @bind-Checked="loginInfo.RememberMe" Label="Remember me" Class="mb-3" /> *@
 
     <!-- Bottone di Submit -->
     <MudButton Variant="Variant.Filled"
-    Color="Color.Primary"
-    FullWidth="true"
-    ButtonType="ButtonType.Submit"
-    Disabled="@(!success || _isLoading)"
-    Size="Size.Large"
-    OnClick="() => HandleSubmit()">
+               Color="Color.Primary"
+               FullWidth="true"
+               ButtonType="ButtonType.Submit"
+               Disabled="@(!success || _isLoading)"
+               Size="Size.Large"
+               OnClick="() => HandleSubmit()">
         Log in
     </MudButton>
 
@@ -67,9 +66,8 @@
     private string? ReturnUrl { get; set; }
 
     private bool showErrorAlert = false;
-    string[] errors = { };
-    bool success;
-
+    private string[] errors = { };
+    private bool success;
     private MudForm _mudForm;
     private bool _isLoading = false;
     private string errorMessage = string.Empty;
@@ -88,26 +86,32 @@
 
             if (response.IsSuccessStatusCode)
             {
-                // Se il login va a buon fine, leggiamo il token dalla risposta
                 var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
 
                 if (result is not null && result.Succeeded)
                 {
                     Snackbar.Add("Login effettuato con successo!", Severity.Success);
 
-                    // Dopo il login, reindirizza alla home o alla dashboard
-                    NavigationManager.NavigateTo("/", forceLoad: true);
+                    if (result.RequiresTwoFactor)
+                    {
+                        // Se l'utente ha il 2FA attivo, reindirizza a LoginWith2fa
+                        var twoFactorUrl = $"/LoginWith2fa?ReturnUrl={Uri.EscapeDataString(ReturnUrl ?? "/")}";
+                        NavigationManager.NavigateTo(twoFactorUrl, forceLoad: true);
+                    }
+                    else
+                    {
+                        NavigationManager.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
+                    }
                 }
-                else {
-                    // Gestione degli errori
+                else
+                {
                     showErrorAlert = true;
-                    errorMessage = result.Message ?? "Invalid email or password.";
+                    errorMessage = result?.Message ?? "Invalid email or password.";
                     Snackbar.Add("Invalid login!", Severity.Error);
                 }
             }
             else
             {
-                // Gestione degli errori
                 showErrorAlert = true;
                 errorMessage = "Invalid email or password.";
             }

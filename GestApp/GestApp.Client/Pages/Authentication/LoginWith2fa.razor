@@ -1,0 +1,120 @@
+﻿@page "/LoginWith2fa"
+@layout LoginLayout
+@using System.ComponentModel.DataAnnotations
+@using GestApp.Client.Layout
+@inject ILogger<LoginWith2fa> Logger
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Log in</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-2">Two-factor authentication</MudText>
+<MudDivider Class="mb-4" />
+
+@if (showErrorAlert)
+{
+    <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center"
+              ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">
+        @errorMessage
+    </MudAlert>
+}
+
+<MudText Class="mb-4">
+    Your login is protected with an authenticator app. Enter your authenticator code below.
+</MudText>
+
+<MudForm @ref="mudForm" Model="Input" OnValidSubmit="OnValidSubmitAsync">
+    <MudTextField @bind-Value="Input.TwoFactorCode" 
+                  Label="Authenticator code" 
+                  For="@(() => Input.TwoFactorCode)" 
+                  Required="true" 
+                  Immediate="true" 
+                  Class="mb-4" />
+
+    @* <MudCheckBox @bind-Checked="Input.RememberMachine" Label="Remember this machine" Class="mb-4" /> *@
+
+    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isSubmitting">
+        Log in
+    </MudButton>
+</MudForm>
+
+@* <MudText Class="mt-4">
+    Don't have access to your authenticator device? You can
+    <MudLink Href="Account/LoginWithRecoveryCode?ReturnUrl=@ReturnUrl" Color="Color.Primary">
+        log in with a recovery code
+    </MudLink>.
+</MudText> *@
+
+@code {
+    private MudForm mudForm;
+    private bool _isSubmitting;
+    private bool showErrorAlert;
+    private string errorMessage = string.Empty;
+
+    // Modello per il form
+    private InputModel Input { get; set; } = new();
+
+    // Parametri passati via query
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery]
+    private bool RememberMe { get; set; }
+
+    private async Task OnValidSubmitAsync()
+    {
+        _isSubmitting = true;
+        await mudForm.Validate();
+        if (!mudForm.IsValid)
+        {
+            _isSubmitting = false;
+            return;
+        }
+
+        // Costruisci il DTO da inviare all'API
+        var twoFactorDto = new TwoFactorLoginRequestDto
+        {
+            TwoFactorCode = Input.TwoFactorCode!
+        };
+
+        var response = await HttpClient.PostAsJsonAsync("api/account/2fa", twoFactorDto);
+        if (response.IsSuccessStatusCode)
+        {
+            // Login 2FA effettuato, reindirizza alla pagina di destinazione
+            NavigationManager.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
+        }
+        else
+        {
+            // Gestione errore: mostra il messaggio restituito dall'API
+            var errorResponse = await response.Content.ReadFromJsonAsync<ApiErrorResponseDto>();
+            errorMessage = errorResponse?.Message ?? "Unknown error.";
+            showErrorAlert = true;
+        }
+        _isSubmitting = false;
+    }
+
+    private void CloseMe(bool value)
+    {
+        showErrorAlert = false;
+    }
+
+    // Modello usato nel form
+    private sealed class InputModel
+    {
+        [Required(ErrorMessage = "Authenticator code is required.")]
+        [StringLength(7, ErrorMessage = "The code must be between {2} and {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Text)]
+        [Display(Name = "Authenticator code")]
+        public string? TwoFactorCode { get; set; }
+
+        [Display(Name = "Remember this machine")]
+        public bool RememberMachine { get; set; }
+    }
+
+    // DTO per gestire gli errori dall'API
+    private sealed class ApiErrorResponseDto
+    {
+        public string Message { get; set; } = string.Empty;
+    }
+}
