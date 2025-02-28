@@ -57,6 +57,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 //builder.Services.AddScoped<ITransactionService, TransactionService>();
 //builder.Services.AddScoped<IUserService, UserService>();
 
+// Add Options binding
+builder.Services.Configure<Settings>(builder.Configuration.GetSection("Settings"));
+
 // Configura l’autenticazione tramite cookie (Identity)
 builder.Services.AddAuthentication(options =>
 {

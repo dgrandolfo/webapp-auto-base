@@ -42,6 +42,19 @@ namespace GestApp.Controllers
         }
 
         /// <summary>
+        /// Effettua il logout dell'utente corrente.
+        /// </summary>
+        /// <param name="returnUrl">La URL di ritorno dopo il logout.</param>
+        /// <returns>Un oggetto IActionResult che indica l'esito dell'operazione.</returns>
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await _authService.LogoutAsync();
+            return Ok(new { Message = "Logout successful" });
+        }
+
+        /// <summary>
         /// Effettua il login di un utente.
         /// </summary>
         /// <param name="loginRequest">I dati per il login.</param>

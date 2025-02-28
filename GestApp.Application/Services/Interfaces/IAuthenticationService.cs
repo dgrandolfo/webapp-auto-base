@@ -13,6 +13,11 @@ public interface IAuthenticationService
     /// <returns>Un <see cref="IdentityResult"/> che indica se l'operazione è andata a buon fine.</returns>
     Task<IdentityResult> RegisterAsync(UserCreateDto model);
     /// <summary>
+    /// Effettua il logout dell'utente corrente.
+    /// </summary>
+    /// <returns>Un task che rappresenta l'operazione asincrona di logout.</returns>
+    Task LogoutAsync();
+    /// <summary>
     /// Esegue il login di un utente.
     /// Se l'utente ha il 2FA abilitato, effettua un login parziale per abilitare il flusso a due fattori.
     /// </summary>

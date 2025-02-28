@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GestApp.Application.Services.Interfaces;
 using GestApp.Models.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestApp.Controllers;
 
 /// <summary>
 /// Controller per le operazioni relative agli utenti.
 /// </summary>
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
@@ -42,7 +44,7 @@ public class UserController : ControllerBase
     /// </summary>
     /// <param name="updateDto">I dati per l'aggiornamento dell'utente.</param>
     /// <returns>Un oggetto <see cref="UserResponseDto"/> con i dati aggiornati dell'utente.</returns>
-    [HttpPost("update")]
+    [HttpPatch("update")]
     public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDto updateDto)
     {
         if (!ModelState.IsValid)

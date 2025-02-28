@@ -40,13 +40,14 @@
             <ChildContent>
                 <PersonCard Class="mt-n2" />
                 <MudDivider Class="mb-2" />
-                <MudListItem T="string" Text="Account" Icon="@Icons.Material.Outlined.Person" Href="/personal/account" />
-                <form id="logoutForm" method="post" action="Account/Logout?returnUrl=">
-                    @* <input name="__RequestVerificationToken" type="hidden" value="@TokenProvider.XsrfToken"> *@
+                <MudListItem T="string" Text="Account" Icon="@Icons.Material.Outlined.Person" Href="/Personal/Account" />
+                <MudListItem T="string" Text="Logout" Icon="@Icons.Material.Outlined.Logout" Href="/Logout" />
+                @* <form id="logoutForm" method="post" action="authentication/logout">
+                    <input name="__RequestVerificationToken" type="hidden" value="@XsrfToken">
                     <button type="submit" form="logoutForm" class="nav-link btn btn-link" style="width: 100%;">
                         <MudListItem T="string" Icon="@Icons.Material.Outlined.Logout">Logout</MudListItem>
                     </button>
-                </form>
+                </form> *@
             </ChildContent>
         </MudMenu>
     </MudAppBar>
@@ -59,16 +60,12 @@
                 <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" OnClick="@((e) => DrawerToggle())" Class="ml-3" />
                 <MudBreadcrumbs Items="BreadcrumbService.Items"></MudBreadcrumbs>
                 <MudSpacer />
-                @* <MudButton Variant="Variant.Text" Link="https://mudblazor.com/" Style="color:#594AE2;">MudBlazor</MudButton>
-                <MudButton Variant="Variant.Text" Link="https://github.com/Garderoben/MudBlazor.Templates" Style="color:#424242;" Class="mr-3">Source Code</MudButton> *@
             </MudToolBar>
         </MudHidden>
         <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
             @Body
         </MudContainer>
     </MudMainContent>
-    @* <MudThemeManagerButton OnClick="@((e) => OpenThemeManager(true))" />
-    <MudThemeManager Open="_themeManagerOpen" OpenChanged="OpenThemeManager" Theme="_themeManager" ThemeChanged="UpdateTheme" /> *@
 </MudLayout>
 
 
@@ -99,11 +96,6 @@
     void UpdateTheme(ThemeManagerTheme value)
     {
         _themeManager = value;
-        StateHasChanged();
-    }
-
-    protected override void OnInitialized()
-    {
         StateHasChanged();
     }
 

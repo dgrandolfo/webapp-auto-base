@@ -203,7 +203,7 @@
                 Surname = userDetails.Surname
             };
 
-        var response = await HttpClient.PostAsJsonAsync("api/user/update", userToUpdate);
+        var response = await HttpClient.PatchAsJsonAsync("api/user/update", userToUpdate);
         if (response.IsSuccessStatusCode)
         {
             var updatedUserResponse = await response.Content.ReadFromJsonAsync<UserResponseDto>();

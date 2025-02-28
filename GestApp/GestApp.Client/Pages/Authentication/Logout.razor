@@ -1,0 +1,33 @@
+﻿@page "/Logout"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await HandleLogout();
+    }
+
+    async Task HandleLogout()
+    {
+        try
+        {
+            var response = await HttpClient.PostAsync("api/authentication/logout", null);
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/Login", forceLoad: true);
+            }
+            else
+            {
+                Snackbar.Add("Logout failed", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log the exception
+            Console.WriteLine($"Exception during logout: {ex.Message}");
+            Snackbar.Add("An error occurred during logout", Severity.Error);
+        }
+    }
+}

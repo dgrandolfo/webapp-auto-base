@@ -49,6 +49,12 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <inheritdoc />
+    public async Task LogoutAsync()
+    {
+        await _signInManager.SignOutAsync();
+    }
+
+    /// <inheritdoc />
     public async Task<LoginResponseDto> LoginAsync(LoginRequestDto loginRequest)
     {
         var user = await _userManager.FindByEmailAsync(loginRequest.Email);
