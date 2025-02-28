@@ -20,7 +20,7 @@
     </MudAlert>
 }
 
-<MudForm @ref="_mudForm" Model="loginInfo" @bind-IsValid="@success" @bind-Errors="@errors">
+<MudForm @ref="mudForm" Model="loginInfo" @bind-IsValid="@success" @bind-Errors="@errors">
     <MudText GutterBottom="true" Align="Align.Left" Typo="Typo.h4">Log In</MudText>
 
     <!-- Campo Email -->
@@ -66,7 +66,7 @@
     private bool showErrorAlert = false;
     private string[] errors = { };
     private bool success;
-    private MudForm _mudForm;
+    private MudForm? mudForm;
     private bool _isLoading = false;
     private string errorMessage = string.Empty;
 
@@ -112,9 +112,14 @@
             }
             else
             {
-                showErrorAlert = true;
                 errorMessage = "Invalid email or password.";
+                showErrorAlert = true;
             }
+        }
+        catch (TaskCanceledException)
+        {
+            errorMessage = "Request timed out.";
+            showErrorAlert = true;
         }
         catch (Exception ex)
         {

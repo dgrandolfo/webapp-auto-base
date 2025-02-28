@@ -155,8 +155,6 @@ public class AuthenticationService : IAuthenticationService
         }
 
         await _userManager.SetTwoFactorEnabledAsync(currentUser, true);
-        var userId = await _userManager.GetUserIdAsync(currentUser);
-        //_logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
 
         string message = "Your authenticator app has been verified.";
         IEnumerable<string>? recoveryCodes = null;
@@ -221,7 +219,7 @@ public class AuthenticationService : IAuthenticationService
     /// </summary>
     /// <param name="uri">L'URI da codificare.</param>
     /// <returns>Una stringa contenente il QR code in formato data:image/png;base64.</returns>
-    private string GenerateQrCode(string uri)
+    private static string GenerateQrCode(string uri)
     {
         using var qrGenerator = new QRCodeGenerator();
         using var qrCodeData = qrGenerator.CreateQrCode(uri, QRCodeGenerator.ECCLevel.Q);

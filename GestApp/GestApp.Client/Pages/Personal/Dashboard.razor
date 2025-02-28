@@ -147,7 +147,7 @@
 </MudGrid>
 
 @code {
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         BreadcrumbService.SetBreadcrumb(new List<BreadcrumbItem>
         {

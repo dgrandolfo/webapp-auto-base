@@ -46,10 +46,10 @@
                         <MudCardContent>
                             <MudGrid>
                                 <MudItem xs="12" md="6">
-                                    <MudTextField @bind-Value="userDetails.Name" Label="First Name" Variant="Variant.Outlined" />
+                                    <MudTextField @bind-Value="userDetails.Name" Label="First Name" Variant="Variant.Outlined" Required="true" />
                                 </MudItem>
                                 <MudItem xs="12" md="6">
-                                    <MudTextField @bind-Value="userDetails.Surname" Label="Last Name" Variant="Variant.Outlined" />
+                                    <MudTextField @bind-Value="userDetails.Surname" Label="Last Name" Variant="Variant.Outlined" Required="true" />
                                 </MudItem>
                                 <MudItem xs="12" md="6">
                                     <MudTextField @bind-Value="userDetails.Role" Label="Role" Variant="Variant.Outlined" Disabled="true" />
@@ -60,7 +60,13 @@
                             </MudGrid>
                         </MudCardContent>
                         <MudCardActions Class="pb-4 pl-4">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" @onclick="SaveChanges">Save Changes</MudButton>
+                            <MudButton Variant="Variant.Filled" 
+                                Color="Color.Primary" 
+                                Class="ml-auto" 
+                                @onclick="SaveChanges"
+                                Disabled="@(string.IsNullOrWhiteSpace(userDetails.Name) || string.IsNullOrWhiteSpace(userDetails.Surname))">
+                                    Save Changes
+                            </MudButton>
                         </MudCardActions>
                     </MudCard>
                 </MudItem>
@@ -72,56 +78,59 @@
                     <MudText Typo="Typo.h6" GutterBottom="true">Authenticator app</MudText>
                 </MudCardHeader>
                 <MudCardContent>
-                    @if (!userDetails.TwoFactorEnabled.Value)
+                    @if (!userDetails.TwoFactorEnabled.HasValue)
                     {
-                        @if (!showEnableAuthenticatorContent)
+                        @if (!userDetails.TwoFactorEnabled!.Value)
                         {
-                            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Rounded.Add" Class="nav-button" @onclick="ToggleEnableAuthenticator">
-                                Add
+                            @if (!showEnableAuthenticatorContent)
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Rounded.Add" Class="nav-button" @onclick="ToggleEnableAuthenticator">
+                                    Add
+                                </MudButton>
+                            }
+                            @if (showEnableAuthenticatorContent) 
+                            {
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body1" GutterBottom="true">To use an authenticator app go through the following steps:</MudText>
+
+                                    <ol class="list ms-4">
+                                        <li>
+                                            <MudText Typo="Typo.body2">
+                                                Download Microsoft Authenticator for
+                                                <MudLink Target="_blank" Href="https://go.microsoft.com/fwlink/?Linkid=825072">Android</MudLink> or
+                                                <MudLink Target="_blank" Href="https://go.microsoft.com/fwlink/?Linkid=825073">iOS</MudLink>
+                                            </MudText>
+                                        </li>
+                                        <li>
+                                            <MudText Typo="Typo.body2">
+                                                Scan the QR Code or enter this key into your two factor authenticator app. Spaces and casing do not matter:
+                                            </MudText>
+
+                                            <MudAlert Variant="Variant.Text" Severity="Severity.Info" Icon="@Icons.Material.Filled.Key">@authenticator.SharedKey</MudAlert>
+
+                                            <div data-url="@authenticator.AuthenticatorUri"></div>
+                                            @if (!string.IsNullOrEmpty(authenticator.QrCodeImage))
+                                            {
+                                                <MudText Typo="Typo.body1">Scan this QR Code with your authenticator app:</MudText>
+                                                <img src="@authenticator.QrCodeImage" alt="QR Code" style="max-width: 200px;" />
+                                            }
+                                        </li>
+                                        <li>
+                                            <MudText Typo="Typo.body2">
+                                                Once you have scanned the QR code or input the key above, your two factor authentication app will provide you
+                                                with a unique code. Enter the code in the confirmation box below.
+                                            </MudText>
+                                        </li>
+                                    </ol>
+                                </MudCardContent>
+                            }
+                        }
+                        else
+                        {
+                            <MudButton Href="Account/Manage/ResetAuthenticator" Variant="Variant.Filled" Color="Color.Error" Class="nav-button">
+                                Reset
                             </MudButton>
                         }
-                        @if (showEnableAuthenticatorContent) 
-                        {
-                            <MudCardContent>
-                                <MudText Typo="Typo.body1" GutterBottom="true">To use an authenticator app go through the following steps:</MudText>
-
-                                <ol class="list ms-4">
-                                    <li>
-                                        <MudText Typo="Typo.body2">
-                                            Download Microsoft Authenticator for
-                                            <MudLink Target="_blank" Href="https://go.microsoft.com/fwlink/?Linkid=825072">Android</MudLink> or
-                                            <MudLink Target="_blank" Href="https://go.microsoft.com/fwlink/?Linkid=825073">iOS</MudLink>
-                                        </MudText>
-                                    </li>
-                                    <li>
-                                        <MudText Typo="Typo.body2">
-                                            Scan the QR Code or enter this key into your two factor authenticator app. Spaces and casing do not matter:
-                                        </MudText>
-
-                                        <MudAlert Variant="Variant.Text" Severity="Severity.Info" Icon="@Icons.Material.Filled.Key">@authenticator.SharedKey</MudAlert>
-
-                                        <div data-url="@authenticator.AuthenticatorUri"></div>
-                                        @if (!string.IsNullOrEmpty(authenticator.QrCodeImage))
-                                        {
-                                            <MudText Typo="Typo.body1">Scan this QR Code with your authenticator app:</MudText>
-                                            <img src="@authenticator.QrCodeImage" alt="QR Code" style="max-width: 200px;" />
-                                        }
-                                    </li>
-                                    <li>
-                                        <MudText Typo="Typo.body2">
-                                            Once you have scanned the QR code or input the key above, your two factor authentication app will provide you
-                                            with a unique code. Enter the code in the confirmation box below.
-                                        </MudText>
-                                    </li>
-                                </ol>
-                            </MudCardContent>
-                        }
-                    }
-                    else
-                    {
-                        <MudButton Href="Account/Manage/ResetAuthenticator" Variant="Variant.Filled" Color="Color.Error" Class="nav-button">
-                            Reset
-                        </MudButton>
                     }
                 </MudCardContent>
                 @if (showEnableAuthenticatorContent)
@@ -159,7 +168,7 @@
     // Flag to show/hide the authenticator setup content
     private bool showEnableAuthenticatorContent = false;
     // Authenticator / Verification code
-    private MudForm mudForm;
+    private MudForm? mudForm;
     private AuthenticatorSetupDto authenticator = new();
     [Required]
     [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
@@ -175,21 +184,32 @@
             new BreadcrumbItem("Account", href: "/Personal/Account")
         });
 
+        // TODO: create getcurrentuser api and call it here instead of using the email from the authstate
         // Recupera l'email dall'AuthenticationState
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var email = authState.User.Identity!.Name!;
 
-        // Carica i dettagli dell'utente tramite API (opzionale)
-        var responseDto = await HttpClient.GetFromJsonAsync<UserResponseDto>($"api/user/{email}");
-        if (responseDto.Succeeded) 
+        var response = await HttpClient.GetAsync($"api/user/{email}");
+        if (response.IsSuccessStatusCode)
         {
-            oldUserDetails = new UserDto
+            var responseDto = await response.Content.ReadFromJsonAsync<UserResponseDto>();
+            if (responseDto is not null && responseDto.Succeeded)
+            {
+                if (responseDto.User is not null)
                 {
-                    Name = responseDto.User.Name,
-                    Surname = responseDto.User.Surname,
-                    Role = responseDto.User.Role
-                };
-            userDetails = responseDto.User;
+                    oldUserDetails = new UserDto
+                        {
+                            Name = responseDto.User.Name,
+                            Surname = responseDto.User.Surname,
+                            Role = responseDto.User.Role
+                        };
+                    userDetails = responseDto.User;
+                }
+                else
+                {
+                    Snackbar.Add("Failed to retrieve user details", Severity.Error);
+                }
+            }
         }
     }
 
@@ -199,8 +219,8 @@
         var userToUpdate = new UserUpdateDto
             {
                 Email = userDetails.Email,
-                Name = userDetails.Name,
-                Surname = userDetails.Surname
+                Name = userDetails.Name!,
+                Surname = userDetails.Surname!
             };
 
         var response = await HttpClient.PatchAsJsonAsync("api/user/update", userToUpdate);

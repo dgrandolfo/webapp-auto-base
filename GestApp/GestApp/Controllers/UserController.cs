@@ -2,6 +2,7 @@
 using GestApp.Application.Services.Interfaces;
 using GestApp.Models.Models;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
 
 namespace GestApp.Controllers;
 

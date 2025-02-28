@@ -17,7 +17,7 @@ public class BreadcrumbService : IBreadcrumbService
         }
     }
 
-    public event Action OnChange;
+    public event Action? OnChange;
 
     public void SetBreadcrumb(List<BreadcrumbItem> items)
     {
