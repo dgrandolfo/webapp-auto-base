@@ -3,6 +3,7 @@ using GestApp.Infrastructure.Data;
 using GestApp.Models.Models;
 using Microsoft.AspNetCore.Identity;
 using AutoMapper;
+using System.Security.Claims;
 
 namespace GestApp.Application.Services;
 
@@ -21,6 +22,22 @@ public class UserService : IUserService
     {
         _userManager = userManager;
         _mapper = mapper;
+    }
+
+    /// <inheritdoc />
+    public async Task<UserResponseDto> GetCurrentUserAsync(ClaimsPrincipal user)
+    {
+        var currentUser = await _userManager.GetUserAsync(user);
+        if (currentUser == null)
+        {
+            return new UserResponseDto { Succeeded = false, Message = "User not found." };
+        }
+
+        var roles = await _userManager.GetRolesAsync(currentUser);
+        var userDto = _mapper.Map<UserDto>(currentUser);
+        userDto.Role = roles.FirstOrDefault();
+
+        return new UserResponseDto { Succeeded = true, User = userDto };
     }
 
     /// <inheritdoc />

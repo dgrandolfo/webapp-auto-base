@@ -26,6 +26,22 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
+    /// Recupera i dati dell'utente corrente.
+    /// </summary>
+    /// <returns>
+    /// Un oggetto <see cref="UserResponseDto"/> contenente i dati dell'utente corrente.
+    /// Se l'utente non è autenticato o non viene trovato, restituisce Unauthorized.
+    /// </returns>
+    [HttpGet("current")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var result = await _userService.GetCurrentUserAsync(User);
+        if (!result.Succeeded)
+            return Unauthorized(result);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Recupera i dati dell'utente in base all'email.
     /// </summary>
     /// <param name="email">L'email dell'utente da cercare.</param>

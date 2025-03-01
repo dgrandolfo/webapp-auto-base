@@ -1,4 +1,5 @@
 ﻿using GestApp.Models.Models;
+using System.Security.Claims;
 
 namespace GestApp.Application.Services.Interfaces;
 
@@ -7,6 +8,15 @@ namespace GestApp.Application.Services.Interfaces;
 /// </summary>
 public interface IUserService
 {
+    /// <summary>
+    /// Recupera i dati dell'utente corrente basandosi sul ClaimsPrincipal.
+    /// </summary>
+    /// <param name="user">Il ClaimsPrincipal dell'utente corrente.</param>
+    /// <returns>
+    /// Un task che restituisce un oggetto <see cref="UserResponseDto"/> contenente i dati dell'utente.
+    /// Se l'utente non viene trovato, il risultato avrà <c>Succeeded</c> impostato a false.
+    /// </returns>
+    Task<UserResponseDto> GetCurrentUserAsync(ClaimsPrincipal user);
     /// <summary>
     /// Recupera i dati dell'utente in base all'email.
     /// </summary>
