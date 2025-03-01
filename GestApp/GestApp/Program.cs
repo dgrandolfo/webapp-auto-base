@@ -21,9 +21,7 @@ builder.Configuration.AddJsonFile("local.appsettings.json", optional: true, relo
 #endif
 
 // Add HttpClient service
-var baseUri = builder.Configuration["Settings:BaseUri"] ?? throw new InvalidOperationException("Base Uri not found.");
-builder.Services.AddScoped<HttpClient>(sp =>
-    new HttpClient { BaseAddress = new Uri(baseUri) });
+builder.Services.AddHttpClient();
 
 // Add MudBlazor services
 builder.Services.AddMudServices(config =>
