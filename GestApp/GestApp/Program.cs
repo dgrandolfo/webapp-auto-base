@@ -21,7 +21,9 @@ builder.Configuration.AddJsonFile("local.appsettings.json", optional: true, relo
 #endif
 
 // Add HttpClient service
-builder.Services.AddHttpClient();
+var baseUri = builder.Configuration["Settings:BaseUri"] ?? throw new InvalidOperationException("Base Uri not found.");
+builder.Services.AddScoped<HttpClient>(sp =>
+    new HttpClient { BaseAddress = new Uri(baseUri) });
 
 // Add MudBlazor services
 builder.Services.AddMudServices(config =>
@@ -69,6 +71,11 @@ builder.Services.AddAuthentication(options =>
 {
     options.LoginPath = "/Login";
     options.AccessDeniedPath = "/Access-Denied";
+})
+.AddCookie(IdentityConstants.TwoFactorUserIdScheme, options =>
+{
+    // Imposta il nome del cookie (facoltativo, ma consigliato)
+    options.Cookie.Name = IdentityConstants.TwoFactorUserIdScheme;
 });
 
 // Aggiungi i controller (API)

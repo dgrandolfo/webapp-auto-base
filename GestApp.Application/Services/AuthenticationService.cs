@@ -177,6 +177,44 @@ public class AuthenticationService : IAuthenticationService
         };
     }
 
+    /// <inheritdoc />
+    public async Task<AuthenticatorSetupDto> ResetAuthenticatorAsync(ClaimsPrincipal user)
+    {
+        var currentUser = await _userManager.GetUserAsync(user);
+        if (currentUser == null)
+        {
+            throw new Exception("User not found.");
+        }
+
+        // Reset della chiave dell'autenticatore
+        await _userManager.ResetAuthenticatorKeyAsync(currentUser);
+
+        // Recupera la nuova chiave non formattata
+        var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(currentUser);
+        if (string.IsNullOrEmpty(unformattedKey))
+        {
+            throw new Exception("Unable to retrieve new authenticator key.");
+        }
+
+        // Format key per renderla più leggibile
+        var sharedKey = FormatKey(unformattedKey);
+
+        // Recupera l'email per generare l'URI
+        var email = await _userManager.GetEmailAsync(currentUser);
+        var authenticatorUri = GenerateQrCodeUri(email ?? "user@example.com", unformattedKey);
+
+        // Genera il QR code (in formato data:image/png;base64)
+        var qrCodeImage = GenerateQrCode(authenticatorUri);
+
+        return new AuthenticatorSetupDto
+        {
+            SharedKey = sharedKey,
+            AuthenticatorUri = authenticatorUri,
+            QrCodeImage = qrCodeImage
+        };
+    }
+
+    #region Private methods
     /// <summary>
     /// Formatta una chiave non formattata per renderla più leggibile.
     /// </summary>
@@ -227,4 +265,5 @@ public class AuthenticationService : IAuthenticationService
         byte[] qrCodeBytes = qrCode.GetGraphic(20);
         return $"data:image/png;base64,{Convert.ToBase64String(qrCodeBytes)}";
     }
+    #endregion
 }

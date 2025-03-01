@@ -18,6 +18,7 @@
     <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">
         @errorMessage
     </MudAlert>
+    <br /><br />
 }
 
 <MudForm @ref="mudForm" Model="Input" @bind-IsValid="@success" @bind-Errors="@errors">
@@ -27,12 +28,12 @@
     </MudText>
 
     <MudTextField @bind-Value="Input.TwoFactorCode" 
-                  Label="Authenticator code" 
-                  For="@(() => Input.TwoFactorCode)"
-                  InputType="InputType.Number"
-                  Required="true" 
-                  Immediate="true" 
-                  Class="mb-6" />
+    Label="Authenticator code" 
+    For="@(() => Input.TwoFactorCode)"
+    InputType="InputType.Number"
+    Required="true" 
+    Immediate="true" 
+    Class="mb-6" />
 
     <MudButton ButtonType="ButtonType.Submit" 
     Variant="Variant.Filled" 
@@ -50,7 +51,7 @@
 
 @code {
     private MudForm? mudForm;
-    private bool _isLoading;
+    private bool _isLoading = false;
 
     private bool success;
     private string[] errors = { };
@@ -95,6 +96,7 @@
         catch (Exception ex)
         {
             errorMessage = ex.Message;
+            showErrorAlert = true;
         }
         finally
         {

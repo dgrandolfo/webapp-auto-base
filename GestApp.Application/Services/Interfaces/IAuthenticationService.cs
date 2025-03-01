@@ -45,4 +45,12 @@ public interface IAuthenticationService
     /// Un oggetto <see cref="TwoFactorVerificationResponseDto"/> che indica l'esito della verifica e contiene, se generati, i codici di recupero.
     /// </returns>
     Task<TwoFactorLoginResponseDto> VerifyTwoFactorAsync(string code, ClaimsPrincipal user);
+    /// <summary>
+    /// Resetta la chiave dell'autenticatore per l'utente corrente e restituisce i nuovi dati di configurazione.
+    /// </summary>
+    /// <param name="user">Il ClaimsPrincipal dell'utente corrente.</param>
+    /// <returns>
+    /// Un task che restituisce un oggetto <see cref="AuthenticatorSetupDto"/> contenente la nuova chiave formattata, l'URI per il QR code e l'immagine del QR code.
+    /// </returns>
+    Task<AuthenticatorSetupDto> ResetAuthenticatorAsync(ClaimsPrincipal user);
 }

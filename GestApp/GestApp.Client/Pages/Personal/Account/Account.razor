@@ -124,7 +124,7 @@
                         }
                         else
                         {
-                            <MudButton Href="Account/Manage/ResetAuthenticator" Variant="Variant.Filled" Color="Color.Error" Class="nav-button">
+                            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Rounded.Clear" Class="nav-button" @onclick="ResetAuthenticator">
                                 Reset
                             </MudButton>
                         }
@@ -181,12 +181,7 @@
             new BreadcrumbItem("Account", href: "/Personal/Account")
         });
 
-        // TODO: create getcurrentuser api and call it here instead of using the email from the authstate
-        // Recupera l'email dall'AuthenticationState
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var email = authState.User.Identity!.Name!;
-
-        var response = await HttpClient.GetAsync($"api/user/{email}");
+        var response = await HttpClient.GetAsync($"api/user/current");
         if (response.IsSuccessStatusCode)
         {
             var responseDto = await response.Content.ReadFromJsonAsync<UserResponseDto>();
@@ -268,6 +263,28 @@
         else
         {
             Snackbar.Add("Verification code not accepted", Severity.Error);
+        }
+    }
+
+    async Task ResetAuthenticator() 
+    {
+        var response = await HttpClient.PostAsync("api/authentication/2fa/reset", null);
+        if (response.IsSuccessStatusCode)
+        {
+            var twofactorResponse = await response.Content.ReadFromJsonAsync<AuthenticatorSetupDto>();
+            if (twofactorResponse is null)
+            {
+                Snackbar.Add("Failed to reset authenticator", Severity.Error);
+                return;
+            }
+            authenticator = twofactorResponse;
+            Snackbar.Add("Reconfigure the authenticator to successfully reset it", Severity.Warning);
+            showEnableAuthenticatorContent = true;
+            //TODO: Aggiustare le cose visibili al click del tasto reset
+        }
+        else
+        {
+            Snackbar.Add("Failed to reset authenticator", Severity.Error);
         }
     }
 

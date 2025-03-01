@@ -127,5 +127,24 @@ namespace GestApp.Controllers
             }
             return Unauthorized(result);
         }
+
+        /// <summary>
+        /// Resetta la chiave dell'autenticatore per l'utente corrente e restituisce i nuovi dati di configurazione.
+        /// </summary>
+        /// <returns>Un oggetto <see cref="AuthenticatorSetupDto"/> contenente la nuova chiave, l'URI e l'immagine del QR code.</returns>
+        [Authorize]
+        [HttpPost("2fa/reset")]
+        public async Task<IActionResult> ResetAuthenticator()
+        {
+            try
+            {
+                var result = await _authService.ResetAuthenticatorAsync(User);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ex.Message });
+            }
+        }
     }
 }
