@@ -1,4 +1,5 @@
 ﻿using GestApp.Models.Models;
+using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
 namespace GestApp.Application.Services.Interfaces;
@@ -17,6 +18,7 @@ public interface IUserService
     /// Se l'utente non viene trovato, il risultato avrà <c>Succeeded</c> impostato a false.
     /// </returns>
     Task<UserResponseDto> GetCurrentUserAsync(ClaimsPrincipal user);
+
     /// <summary>
     /// Recupera i dati dell'utente in base all'email.
     /// </summary>
@@ -27,6 +29,14 @@ public interface IUserService
     Task<UserResponseDto> GetUserByEmailAsync(string email);
 
     /// <summary>
+    /// Recupera la lista di tutti gli utenti presenti nel database.
+    /// </summary>
+    /// <returns>
+    /// Una <see cref="Task{TResult}"/> che rappresenta l'operazione asincrona e restituisce una lista di <see cref="UserDto"/>.
+    /// </returns>
+    Task<List<UserDto>> GetAllUsersAsync();
+
+    /// <summary>
     /// Aggiorna il nome e il cognome dell'utente.
     /// </summary>
     /// <param name="updateDto">I dati per l'aggiornamento dell'utente, contenenti email, name e surname.</param>
@@ -34,4 +44,13 @@ public interface IUserService
     /// Un task che rappresenta l'operazione asincrona. Il risultato contiene un oggetto <see cref="UserResponseDto"/> con i dati aggiornati dell'utente.
     /// </returns>
     Task<UserResponseDto> UpdateUserAsync(UserUpdateDto updateDto);
+
+    /// <summary>
+    /// Elimina l'utente identificato dall'email specificata.
+    /// </summary>
+    /// <param name="email">L'email dell'utente da eliminare.</param>
+    /// <returns>
+    /// Un <see cref="Task{IdentityResult}"/> che indica l'esito dell'operazione.
+    /// </returns>
+    Task<IdentityResult> DeleteUserAsync(string email);
 }

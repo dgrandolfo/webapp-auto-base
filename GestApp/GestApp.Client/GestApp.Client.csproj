@@ -18,10 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Pages\Administration\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\GestApp.Models\GestApp.Models.csproj" />
   </ItemGroup>
 

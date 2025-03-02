@@ -4,6 +4,7 @@ using GestApp.Models.Models;
 using Microsoft.AspNetCore.Identity;
 using AutoMapper;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace GestApp.Application.Services;
 
@@ -57,6 +58,25 @@ public class UserService : IUserService
     }
 
     /// <inheritdoc />
+    public async Task<List<UserDto>> GetAllUsersAsync()
+    {
+        var users = await _userManager.Users.ToListAsync();
+
+        var userDtos = _mapper.Map<List<UserDto>>(users);
+
+        foreach (var userDto in userDtos)
+        {
+            var userEntity = users.FirstOrDefault(u => u.Email == userDto.Email);
+            if (userEntity != null)
+            {
+                var roles = await _userManager.GetRolesAsync(userEntity);
+                userDto.Role = roles.FirstOrDefault();
+            }
+        }
+        return userDtos;
+    }
+
+    /// <inheritdoc />
     public async Task<UserResponseDto> UpdateUserAsync(UserUpdateDto updateDto)
     {
         var user = await _userManager.FindByEmailAsync(updateDto.Email);
@@ -83,5 +103,16 @@ public class UserService : IUserService
         userDto.Role = roles.FirstOrDefault();
 
         return new UserResponseDto { Succeeded = true, User = userDto };
+    }
+
+    /// <inheritdoc />
+    public async Task<IdentityResult> DeleteUserAsync(string email)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+        }
+        return await _userManager.DeleteAsync(user);
     }
 }

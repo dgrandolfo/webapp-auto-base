@@ -57,6 +57,18 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
+    /// Recupera la lista di tutti gli utenti presenti nel database.
+    /// </summary>
+    /// <returns>Una lista di <see cref="UserDto"/>.</returns>
+    [Authorize(Roles = "Admin")]
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        var users = await _userService.GetAllUsersAsync();
+        return Ok(users);
+    }
+
+    /// <summary>
     /// Aggiorna il nome e il cognome dell'utente.
     /// </summary>
     /// <param name="updateDto">I dati per l'aggiornamento dell'utente.</param>
@@ -72,5 +84,21 @@ public class UserController : ControllerBase
             return BadRequest(response);
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Elimina l'utente identificato dall'email specificata.
+    /// </summary>
+    /// <param name="dto">Il DTO contenente l'email dell'utente da eliminare.</param>
+    /// <returns>Un oggetto <see cref="UserResponseDto"/> che indica l'esito dell'operazione.</returns>
+    [HttpDelete("delete/{email}")]
+    public async Task<IActionResult> DeleteUser(string email)
+    {
+        var result = await _userService.DeleteUserAsync(email);
+        if (!result.Succeeded)
+        {
+            return BadRequest(new UserResponseDto { Succeeded = false, Message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+        }
+        return Ok(new UserResponseDto { Succeeded = true });
     }
 }

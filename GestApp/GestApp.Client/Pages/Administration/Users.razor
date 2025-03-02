@@ -1,0 +1,210 @@
+﻿@page "/Administration/Users"
+@using GestApp.Client.Shared
+
+
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@* @inject ITransactionService TransactionService *@
+@inject IBreadcrumbService BreadcrumbService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Users</PageTitle>
+
+<MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">Users</MudText>
+<div class="d-flex justify-space-between">
+    <MudFab OnClick="@CreateUser" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Label="Create" DropShadow="false" Class="mb-4" />
+    <MudFab OnClick="@SaveChanges" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Save" Label="Save" DropShadow="false" Class="mb-4" />
+</div>
+<MudDataGrid T="UserDto" Items="@UsersList" SortMode="SortMode.Multiple" Filterable="false" QuickFilter="@_quickFilter"
+             StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
+             ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered="true" Hover="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Users List</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.Name" SortBy="@_sortBy" />
+        <PropertyColumn Property="x => x.Surname" />
+        <PropertyColumn Property="x => x.FiscalCode" Title="Fiscal Code" Editable="false" />
+        <PropertyColumn Property="x => x.Email" Editable="false" />
+        <PropertyColumn Property="x => x.Role" />
+        <TemplateColumn StickyRight="true">
+            <CellTemplate Context="user">
+                <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Color="Color.Error" OnClick="@(() => DeleteUserAsync(user.Item))" />
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="UserDto" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    private List<UserDto> UsersList = new();
+    private string _searchString;
+    private bool _sortNameByLength;
+    private HashSet<UserDto> _modifiedUsers = new();
+
+    private Func<UserDto, object> _sortBy => x =>
+    {
+        if (_sortNameByLength)
+            return x.Name.Length;
+        else
+            return x.Name;
+    };
+
+    private Func<UserDto, bool> _quickFilter => x =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (x.Name != null && x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.Surname != null && x.Surname.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.FiscalCode != null && x.FiscalCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.Email != null && x.Email.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.Role != null && x.Role.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        BreadcrumbService.SetBreadcrumb(new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Users", href: "/Administration/Users")
+        });
+
+        UsersList = await GetUsersListAsync();
+    }
+
+    private async Task<List<UserDto>> GetUsersListAsync()
+    {
+        // Effettua la chiamata all'API per ottenere la lista di tutti gli utenti
+        var usersList = await HttpClient.GetFromJsonAsync<List<UserDto>>("api/user/all");
+        // Effettua la chiamata all'API per ottenere l'utente corrente
+        // var currentUser = await HttpClient.GetFromJsonAsync<UserDto>("api/user/current");
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var email = authState.User.Identity.Name;
+
+        if (usersList != null && email != null)
+        {
+            // Remove current user
+            usersList = usersList.Where(u => u.Email != email).ToList();
+
+            usersList = usersList.OrderByDescending(u => u.CreatedAt).ToList();
+        }
+        else
+        {
+            usersList = new List<UserDto>();
+        }
+
+        return usersList;
+    }
+
+
+    private async Task DeleteUserAsync(UserDto userToDelete)
+    {
+        var parameters = new DialogParameters
+        {
+            ["ContentText"] = "Do you really want to delete this record? This process cannot be undone.",
+            ["ButtonText"] = "Delete",
+            ["Color"] = Color.Error
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var dialog = await DialogService.ShowAsync<Dialog>("Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await ConfirmDeleteAsync(userToDelete);
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(UserDto userToDelete)
+    {
+        try
+        {
+            var response = await HttpClient.DeleteAsync($"api/user/delete/{userToDelete.Email}");
+            if (response.IsSuccessStatusCode)
+            {
+                UsersList.Remove(userToDelete);
+                if (_modifiedUsers.Contains(userToDelete)) _modifiedUsers.Remove(userToDelete);
+                StateHasChanged();
+                Snackbar.Add("Record successfully deleted!", Severity.Success);
+            }
+            else
+            {
+                var errorResponse = await response.Content.ReadFromJsonAsync<UserResponseDto>();
+                Snackbar.Add("Error while deleting the record: " + (errorResponse?.Message ?? "Unknown error"), Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error while deleting the record: {ex.Message}", Severity.Error);
+        }
+    }
+
+
+    private async Task SaveChanges()
+    {
+        try
+        {
+            foreach (var user in _modifiedUsers)
+            {
+                var response = await HttpClient.PatchAsJsonAsync("api/user/update", user);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorResponse = await response.Content.ReadFromJsonAsync<UserResponseDto>();
+                    throw new Exception($"Errore durante l'aggiornamento dell'utente {user.Email}: {errorResponse?.Message}");
+                }
+            }
+
+            Snackbar.Add("Changes successfully saved!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error while saving changes: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            UsersList = await GetUsersListAsync();
+            _modifiedUsers.Clear();
+        }
+    }
+
+    private void CreateUser()
+    {
+        NavigationManager.NavigateTo("/Administration/Users/Create");
+    }
+
+    void StartedEditingItem(UserDto item)
+    {
+    }
+
+    void CanceledEditingItem(UserDto item)
+    {
+    }
+
+    void CommittedItemChanges(UserDto item)
+    {
+        _modifiedUsers.Add(item);
+    }
+}
