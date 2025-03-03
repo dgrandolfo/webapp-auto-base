@@ -52,6 +52,15 @@ public interface IUserService
     /// <returns>
     /// Un task che rappresenta l'operazione asincrona. Il risultato contiene un oggetto <see cref="UserResponseDto"/> con i dati aggiornati dell'utente.
     /// </returns>
+    Task<UserResponseDto> UpdateUserAccountAsync(UserAccountUpdateDto updateDto);
+
+    /// <summary>
+    /// Aggiorna i dettagli dell'utente.
+    /// </summary>
+    /// <param name="updateDto">I dati per l'aggiornamento dell'utente.</param>
+    /// <returns>
+    /// Un task che rappresenta l'operazione asincrona. Il risultato contiene un oggetto <see cref="UserResponseDto"/> con i dati aggiornati dell'utente.
+    /// </returns>
     Task<UserResponseDto> UpdateUserAsync(UserUpdateDto updateDto);
 
     /// <summary>

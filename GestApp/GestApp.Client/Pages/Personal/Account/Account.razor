@@ -208,7 +208,7 @@
     async Task SaveChanges()
     {
         // Crea un DTO per l'aggiornamento con email, FirstName e LastName
-        var userToUpdate = new UserUpdateDto
+        var userToUpdate = new UserAccountUpdateDto
             {
                 Email = userDetails.Email,
                 Name = userDetails.Name!,

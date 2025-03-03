@@ -16,7 +16,6 @@
 <MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">Users</MudText>
 <div class="d-flex justify-space-between">
     <MudFab OnClick="@CreateUser" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Label="Create" DropShadow="false" Class="mb-4" />
-    <MudFab OnClick="@SaveChanges" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Save" Label="Save" DropShadow="false" Class="mb-4" />
 </div>
 <MudDataGrid T="UserDto" Items="@UsersList" SortMode="SortMode.Multiple" Filterable="false" QuickFilter="@_quickFilter"
              StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
@@ -32,7 +31,19 @@
         <PropertyColumn Property="x => x.Surname" />
         <PropertyColumn Property="x => x.FiscalCode" Title="Fiscal Code" Editable="false" />
         <PropertyColumn Property="x => x.Email" Editable="false" />
-        <PropertyColumn Property="x => x.Role" />
+        <TemplateColumn Title="Role">
+            <CellTemplate Context="user">
+                @user.Item.Role
+            </CellTemplate>
+            <EditTemplate Context="user">
+                <MudSelect @bind-Value="user.Item.Role" Label="Role" Variant="Variant.Outlined">
+                    @foreach (var role in RolesList)
+                    {
+                        <MudSelectItem Value="@role">@role</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </TemplateColumn>
         <TemplateColumn StickyRight="true">
             <CellTemplate Context="user">
                 <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Color="Color.Error" OnClick="@(() => DeleteUserAsync(user.Item))" />
@@ -48,7 +59,7 @@
     private List<UserDto> UsersList = new();
     private string _searchString;
     private bool _sortNameByLength;
-    private HashSet<UserDto> _modifiedUsers = new();
+    private List<string> RolesList = Enum.GetValues<UserRoleDto>().Select(r => r.ToString()).ToList();
 
     private Func<UserDto, object> _sortBy => x =>
     {
@@ -146,7 +157,6 @@
             if (response.IsSuccessStatusCode)
             {
                 UsersList.Remove(userToDelete);
-                if (_modifiedUsers.Contains(userToDelete)) _modifiedUsers.Remove(userToDelete);
                 StateHasChanged();
                 Snackbar.Add("Record successfully deleted!", Severity.Success);
             }
@@ -163,18 +173,15 @@
     }
 
 
-    private async Task SaveChanges()
+    private async Task SaveChangesAsync(UserDto userToUpdate)
     {
         try
         {
-            foreach (var user in _modifiedUsers)
+            var response = await HttpClient.PostAsJsonAsync("api/user/update", userToUpdate);
+            if (!response.IsSuccessStatusCode)
             {
-                var response = await HttpClient.PatchAsJsonAsync("api/user/update", user);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorResponse = await response.Content.ReadFromJsonAsync<UserResponseDto>();
-                    throw new Exception($"Errore durante l'aggiornamento dell'utente {user.Email}: {errorResponse?.Message}");
-                }
+                var errorResponse = await response.Content.ReadFromJsonAsync<UserResponseDto>();
+                throw new Exception($"Errore durante l'aggiornamento dell'utente {userToUpdate.Email}: {errorResponse?.Message}");
             }
 
             Snackbar.Add("Changes successfully saved!", Severity.Success);
@@ -186,7 +193,6 @@
         finally
         {
             UsersList = await GetUsersListAsync();
-            _modifiedUsers.Clear();
         }
     }
 
@@ -203,8 +209,8 @@
     {
     }
 
-    void CommittedItemChanges(UserDto item)
+    async Task CommittedItemChanges(UserDto item)
     {
-        _modifiedUsers.Add(item);
+        await SaveChangesAsync(item);
     }
 }

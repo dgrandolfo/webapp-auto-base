@@ -42,7 +42,7 @@ public class UserCreateDto
     public string Role { get; set; } = string.Empty;
 }
 
-public class UserUpdateDto
+public class UserAccountUpdateDto
 {
     [Required(ErrorMessage = "Name is required.")]
     public string Name { get; set; } = string.Empty;
@@ -50,6 +50,12 @@ public class UserUpdateDto
     public string Surname { get; set; } = string.Empty;
     [EmailAddress(ErrorMessage = "Invalid email address.")]
     public string Email { get; set; } = string.Empty;
+}
+
+public class UserUpdateDto : UserAccountUpdateDto
+{
+    [Required(ErrorMessage = "Role is required.")]
+    public string Role { get; set; } = string.Empty;
 }
 
 public class UserResponseDto

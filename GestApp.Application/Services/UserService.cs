@@ -28,6 +28,7 @@ public class UserService : IUserService
     /// <inheritdoc />
     public async Task<IdentityResult> CreateUserAsync(UserCreateDto userToCreate)
     {
+        userToCreate.FiscalCode = userToCreate.FiscalCode.ToUpper();
         var appUserToCreate = _mapper.Map<ApplicationUser>(userToCreate);
         var createResult = await _userManager.CreateAsync(appUserToCreate, userToCreate.Password);
         if (!createResult.Succeeded)
@@ -99,7 +100,7 @@ public class UserService : IUserService
     }
 
     /// <inheritdoc />
-    public async Task<UserResponseDto> UpdateUserAsync(UserUpdateDto updateDto)
+    public async Task<UserResponseDto> UpdateUserAccountAsync(UserAccountUpdateDto updateDto)
     {
         var user = await _userManager.FindByEmailAsync(updateDto.Email);
         if (user == null)
@@ -126,6 +127,69 @@ public class UserService : IUserService
 
         return new UserResponseDto { Succeeded = true, User = userDto };
     }
+
+    /// <inheritdoc />
+    public async Task<UserResponseDto> UpdateUserAsync(UserUpdateDto userToUpdate)
+    {
+        var user = await _userManager.FindByEmailAsync(userToUpdate.Email);
+        if (user == null)
+        {
+            return new UserResponseDto { Succeeded = false, Message = "User not found." };
+        }
+
+        user.Name = userToUpdate.Name;
+        user.Surname = userToUpdate.Surname;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            return new UserResponseDto
+            {
+                Succeeded = false,
+                Message = string.Join(", ", result.Errors.Select(e => e.Description))
+            };
+        }
+
+        if (!string.IsNullOrWhiteSpace(userToUpdate.Role))
+        {
+            // Rimuovi eventuali ruoli esistenti
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            Console.WriteLine(currentRoles.ToString());
+            if (currentRoles.Any())
+            {
+                var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                if (!removeResult.Succeeded)
+                {
+                    return new UserResponseDto
+                    {
+                        Succeeded = false,
+                        Message = string.Join(", ", removeResult.Errors.Select(e => e.Description))
+                    };
+                }
+                Console.WriteLine(removeResult.Succeeded);
+            }
+
+            Console.WriteLine(userToUpdate.Role);
+            // Assegna il nuovo ruolo
+            var addResult = await _userManager.AddToRoleAsync(user, userToUpdate.Role);
+            if (!addResult.Succeeded)
+            {
+                return new UserResponseDto
+                {
+                    Succeeded = false,
+                    Message = string.Join(", ", addResult.Errors.Select(e => e.Description))
+                };
+            }
+            await _userManager.UpdateSecurityStampAsync(user);
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var userDto = _mapper.Map<UserDto>(user);
+        userDto.Role = roles.FirstOrDefault();
+
+        return new UserResponseDto { Succeeded = true, User = userDto };
+    }
+
 
     /// <inheritdoc />
     public async Task<IdentityResult> DeleteUserAsync(string email)

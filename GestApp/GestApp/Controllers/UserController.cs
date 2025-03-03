@@ -30,6 +30,7 @@ public class UserController : ControllerBase
     /// </summary>
     /// <param name="userToCreate">I dati per la creazione dell'utente.</param>
     /// <returns>Un oggetto <see cref="UserResponseDto"/> che indica l'esito dell'operazione.</returns>
+    [Authorize(Roles = "Admin")]
     [HttpPost("create")]
     public async Task<IActionResult> CreateUser([FromBody] UserCreateDto userToCreate)
     {
@@ -97,15 +98,34 @@ public class UserController : ControllerBase
     /// <summary>
     /// Aggiorna il nome e il cognome dell'utente.
     /// </summary>
-    /// <param name="updateDto">I dati per l'aggiornamento dell'utente.</param>
+    /// <param name="userToUpdate">I dati per l'aggiornamento dell'utente.</param>
     /// <returns>Un oggetto <see cref="UserResponseDto"/> con i dati aggiornati dell'utente.</returns>
     [HttpPatch("update")]
-    public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDto updateDto)
+    public async Task<IActionResult> UpdateUserNameSurname([FromBody] UserAccountUpdateDto userToUpdate)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var response = await _userService.UpdateUserAsync(updateDto);
+        var response = await _userService.UpdateUserAccountAsync(userToUpdate);
+        if (!response.Succeeded)
+            return BadRequest(response);
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Aggiorna il nome e il cognome dell'utente.
+    /// </summary>
+    /// <param name="userToUpdate">I dati per l'aggiornamento dell'utente.</param>
+    /// <returns>Un oggetto <see cref="UserResponseDto"/> con i dati aggiornati dell'utente.</returns>
+    [Authorize(Roles = "Admin")]
+    [HttpPost("update")]
+    public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDto userToUpdate)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var response = await _userService.UpdateUserAsync(userToUpdate);
         if (!response.Succeeded)
             return BadRequest(response);
 
