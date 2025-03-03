@@ -26,6 +26,32 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
+    /// Crea un nuovo utente utilizzando i dati forniti.
+    /// </summary>
+    /// <param name="userToCreate">I dati per la creazione dell'utente.</param>
+    /// <returns>Un oggetto <see cref="UserResponseDto"/> che indica l'esito dell'operazione.</returns>
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateUser([FromBody] UserCreateDto userToCreate)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await _userService.CreateUserAsync(userToCreate);
+        if (result.Succeeded)
+        {
+            return Ok(new UserResponseDto { Succeeded = true });
+        }
+        else
+        {
+            return BadRequest(new UserResponseDto
+            {
+                Succeeded = false,
+                Message = string.Join(", ", result.Errors.Select(e => e.Description).FirstOrDefault())
+            });
+        }
+    }
+
+    /// <summary>
     /// Recupera i dati dell'utente corrente.
     /// </summary>
     /// <returns>
@@ -91,6 +117,7 @@ public class UserController : ControllerBase
     /// </summary>
     /// <param name="dto">Il DTO contenente l'email dell'utente da eliminare.</param>
     /// <returns>Un oggetto <see cref="UserResponseDto"/> che indica l'esito dell'operazione.</returns>
+    [Authorize(Roles = "Admin")]
     [HttpDelete("delete/{email}")]
     public async Task<IActionResult> DeleteUser(string email)
     {

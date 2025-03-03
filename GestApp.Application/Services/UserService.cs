@@ -26,6 +26,28 @@ public class UserService : IUserService
     }
 
     /// <inheritdoc />
+    public async Task<IdentityResult> CreateUserAsync(UserCreateDto userToCreate)
+    {
+        var appUserToCreate = _mapper.Map<ApplicationUser>(userToCreate);
+        var createResult = await _userManager.CreateAsync(appUserToCreate, userToCreate.Password);
+        if (!createResult.Succeeded)
+        {
+            return createResult;
+        }
+
+        if (!string.IsNullOrWhiteSpace(userToCreate.Role))
+        {
+            var roleResult = await _userManager.AddToRoleAsync(appUserToCreate, userToCreate.Role);
+            if (!roleResult.Succeeded)
+            {
+                return IdentityResult.Failed(roleResult.Errors.ToArray());
+            }
+        }
+
+        return IdentityResult.Success;
+    }
+
+    /// <inheritdoc />
     public async Task<UserResponseDto> GetCurrentUserAsync(ClaimsPrincipal user)
     {
         var currentUser = await _userManager.GetUserAsync(user);

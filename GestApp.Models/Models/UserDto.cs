@@ -65,3 +65,10 @@ public class AuthenticatorSetupDto
     public string AuthenticatorUri { get; set; } = string.Empty;
     public string QrCodeImage { get; set; } = string.Empty;
 }
+
+public enum UserRoleDto
+{
+    Admin,
+    Responsable,
+    Operator
+}

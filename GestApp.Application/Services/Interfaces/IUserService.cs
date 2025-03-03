@@ -10,6 +10,15 @@ namespace GestApp.Application.Services.Interfaces;
 public interface IUserService
 {
     /// <summary>
+    /// Crea un nuovo utente basandosi sui dati forniti.
+    /// </summary>
+    /// <param name="model">I dati per la creazione dell'utente.</param>
+    /// <returns>
+    /// Un <see cref="Task{IdentityResult}"/> che rappresenta l'esito dell'operazione.
+    /// </returns>
+    Task<IdentityResult> CreateUserAsync(UserCreateDto model);
+
+    /// <summary>
     /// Recupera i dati dell'utente corrente basandosi sul ClaimsPrincipal.
     /// </summary>
     /// <param name="user">Il ClaimsPrincipal dell'utente corrente.</param>

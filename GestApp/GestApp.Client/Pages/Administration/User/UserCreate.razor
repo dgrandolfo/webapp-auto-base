@@ -1,0 +1,117 @@
+﻿@page "/Administration/Users/Create"
+
+@inject NavigationManager NavigationManager
+@inject IBreadcrumbService BreadcrumbService
+@inject ISnackbar Snackbar
+
+@attribute [Authorize]
+
+<PageTitle>Create User</PageTitle>
+
+<MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">Create User</MudText>
+
+<MudPaper Elevation="3" Class="pa-4">
+    <EditForm Model="@NewUser" OnValidSubmit="HandleCreate">
+        <DataAnnotationsValidator />
+
+        <MudGrid>
+            <!-- Prima colonna -->
+            <MudItem xs="12" sm="6" Class="pr-2">
+                <MudTextField @bind-Value="NewUser.Name" For="@(() => NewUser.Name)" Label="Name" Variant="Variant.Outlined" Required="true" Class="mb-4" />
+                <MudTextField @bind-Value="NewUser.Surname" For="@(() => NewUser.Surname)" Label="Surname" Variant="Variant.Outlined" Required="true" Class="mb-4" />
+                <MudTextField @bind-Value="NewUser.FiscalCode" For="@(() => NewUser.FiscalCode)" Label="Fiscal Code" Variant="Variant.Outlined" Required="true" Class="mb-4" />
+                <MudTextField @bind-Value="NewUser.Email" For="@(() => NewUser.Email)" Label="Email" Variant="Variant.Outlined" Required="true" Class="mb-4" />
+            </MudItem>
+
+            <!-- Seconda colonna -->
+            <MudItem xs="12" sm="6" Class="pl-2">
+                <MudAutocomplete T="string" @bind-Value="NewUser.Role" Label="Role" Variant="Variant.Outlined" Required="true" Class="mb-4"
+                                 ResetValueOnEmptyText="true" SearchFunc="@Search" ToStringFunc="@(role => role)" />
+                <MudTextField @bind-Value="NewUser.Password" For="@(() => NewUser.Password)" Label="Password" 
+                              InputType="InputType.Password" Variant="Variant.Outlined" Required="true" Class="mb-4" />
+                <MudTextField @bind-Value="NewUser.ConfirmPassword" For="@(() => NewUser.ConfirmPassword)" Label="Confirm Password" 
+                              InputType="InputType.Password" Variant="Variant.Outlined" Required="true" Class="mb-4" />
+            </MudItem>
+        </MudGrid>
+
+        <div class="d-flex justify-end mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick=@Cancel>Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-2">Save</MudButton>
+        </div>
+    </EditForm>
+</MudPaper>
+
+@code {
+    private UserCreateDto NewUser = new();
+    private List<string> AvailableRoles = Enum.GetNames(typeof(UserRoleDto)).ToList();
+
+    protected override void OnInitialized()
+    {
+        BreadcrumbService.SetBreadcrumb(new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Users", href: "/Administration/Users"),
+            new BreadcrumbItem("Create User", href: "/Administration/Users/Create")
+        });
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/Administration/Users");
+    }
+
+    private async Task HandleCreate()
+    {
+        try
+        {
+            // Effettua la chiamata POST all'endpoint per creare l'utente
+            var response = await HttpClient.PostAsJsonAsync("api/user/create", NewUser);
+            if (response.IsSuccessStatusCode)
+            {
+                // Deserializza la risposta nel DTO atteso
+                var result = await response.Content.ReadFromJsonAsync<UserResponseDto>();
+                if (result != null && result.Succeeded)
+                {
+                    Snackbar.Add("User created successfully!", Severity.Success);
+                    NavigationManager.NavigateTo("/Administration/Users");
+                }
+                else
+                {
+                    if (result != null && result.Message.Length > 0)
+                    {
+                        Snackbar.Add($"Error: {result.Message}", Severity.Error);
+                    }
+                    else
+                    {
+                        Snackbar.Add($"Unexpected error while creating user", Severity.Error);
+                    }
+                }
+            }
+            else
+            {
+                var result = await response.Content.ReadFromJsonAsync<UserResponseDto>();
+                if (result != null && result.Message.Length > 0)
+                {
+                    Snackbar.Add($"Error: {result.Message}", Severity.Error);
+                }
+                else
+                {
+                    Snackbar.Add($"Unexpected error while creating user", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // Funzione per cercare i ruoli nell'autocomplete
+    private Task<IEnumerable<string>> Search(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(AvailableRoles.AsEnumerable());
+
+        return Task.FromResult(AvailableRoles.Where(role => role.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
+    }
+}
