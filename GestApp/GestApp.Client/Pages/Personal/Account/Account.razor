@@ -15,60 +15,129 @@
     <MudTabs Elevation="1" Rounded="true" PanelClass="mt-6">
         <MudTabPanel Text="General">
             <MudGrid>
+                <!-- Card Profilo -->
                 <MudItem xs="12" sm="4" md="3">
                     <MudCard>
                         <MudCardHeader>
                             <CardHeaderContent>
-                                <MudText>Profile</MudText>
+                                @if (!isLoaded)
+                                {
+                                    <MudSkeleton Variant="SkeletonVariant.Text" Width="150px" Height="32px" />
+                                }
+                                else
+                                {
+                                    <MudText>Profile</MudText>
+                                }
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
-                            <div class="d-flex justify-center mb-3">
-                                <MudAvatar Color="Color.Primary" Style="height:100px; width:100px;">
-                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Style="height:100px; width:100px;" />
-                                </MudAvatar>
-                            </div>
-                            <MudText Align="Align.Center" Typo="Typo.h6" Style="font-weight:bold">@oldUserDetails.Name @oldUserDetails.Surname</MudText>
-                            <MudText Align="Align.Center" Typo="Typo.body1">@oldUserDetails.Role</MudText>
+                            @if (!isLoaded)
+                            {
+                                <div class="d-flex flex-column align-items-center">
+                                    <MudSkeleton Variant="SkeletonVariant.Circular" Width="100px" Height="100px" />
+                                    <MudSkeleton Variant="SkeletonVariant.Text" Width="80%" Height="24px" Class="mt-2" />
+                                    <MudSkeleton Variant="SkeletonVariant.Text" Width="60%" Height="20px" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex justify-center mb-3">
+                                    <MudAvatar Color="Color.Primary" Style="height:100px; width:100px;">
+                                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Style="height:100px; width:100px;" />
+                                    </MudAvatar>
+                                </div>
+                                <MudText Align="Align.Center" Typo="Typo.h6" Style="font-weight:bold">
+                                    @oldUserDetails.Name @oldUserDetails.Surname
+                                </MudText>
+                                <MudText Align="Align.Center" Typo="Typo.body1">
+                                    @oldUserDetails.Role
+                                </MudText>
+                            }
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
+
+                <!-- Card Dettagli Profilo -->
                 <MudItem xs="12" sm="8" md="9">
                     <MudCard>
                         <MudCardHeader>
                             <CardHeaderContent>
-                                <MudText>Profile Details</MudText>
+                                @if (!isLoaded)
+                                {
+                                    <MudSkeleton Variant="SkeletonVariant.Text" Width="150px" Height="32px" />
+                                }
+                                else
+                                {
+                                    <MudText>Profile Details</MudText>
+                                }
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
                             <MudGrid>
                                 <MudItem xs="12" md="6">
-                                    <MudTextField @bind-Value="userDetails.Name" Label="First Name" Variant="Variant.Outlined" Required="true" />
+                                    @if (!isLoaded)
+                                    {
+                                        <MudSkeleton Variant="SkeletonVariant.Rectangular" Height="56px" Width="100%" />
+                                    }
+                                    else
+                                    {
+                                        <MudTextField @bind-Value="userDetails.Name" Label="First Name" Variant="Variant.Outlined" Required="true" />
+                                    }
                                 </MudItem>
                                 <MudItem xs="12" md="6">
-                                    <MudTextField @bind-Value="userDetails.Surname" Label="Last Name" Variant="Variant.Outlined" Required="true" />
+                                    @if (!isLoaded)
+                                    {
+                                        <MudSkeleton Variant="SkeletonVariant.Rectangular" Height="56px" Width="100%" />
+                                    }
+                                    else
+                                    {
+                                        <MudTextField @bind-Value="userDetails.Surname" Label="Last Name" Variant="Variant.Outlined" Required="true" />
+                                    }
                                 </MudItem>
                                 <MudItem xs="12" md="6">
-                                    <MudTextField @bind-Value="userDetails.Role" Label="Role" Variant="Variant.Outlined" Disabled="true" />
+                                    @if (!isLoaded)
+                                    {
+                                        <MudSkeleton Variant="SkeletonVariant.Rectangular" Height="56px" Width="100%" />
+                                    }
+                                    else
+                                    {
+                                        <MudTextField @bind-Value="userDetails.Role" Label="Role" Variant="Variant.Outlined" Disabled="true" />
+                                    }
                                 </MudItem>
                                 <MudItem xs="12" md="6">
-                                    <MudTextField @bind-Value="userDetails.Email" Label="Email" Variant="Variant.Outlined" HelperText="Don't worry, we shall not spam!" Disabled="true" InputType="InputType.Email" />
+                                    @if (!isLoaded)
+                                    {
+                                        <MudSkeleton Variant="SkeletonVariant.Rectangular" Height="56px" Width="100%" />
+                                    }
+                                    else
+                                    {
+                                        <MudTextField @bind-Value="userDetails.Email" Label="Email" Variant="Variant.Outlined"
+                                                      HelperText="Don't worry, we shall not spam!" Disabled="true" InputType="InputType.Email" />
+                                    }
                                 </MudItem>
                             </MudGrid>
                         </MudCardContent>
                         <MudCardActions Class="pb-4 pl-4">
-                            <MudButton Variant="Variant.Filled" 
-                                Color="Color.Primary" 
-                                Class="ml-auto" 
-                                @onclick="SaveChanges"
-                                Disabled="@(string.IsNullOrWhiteSpace(userDetails.Name) || string.IsNullOrWhiteSpace(userDetails.Surname))">
+                            @if (!isLoaded)
+                            {
+                                <MudSkeleton Variant="SkeletonVariant.Rectangular" Height="36px" Width="150px" />
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Class="ml-auto"
+                                           @onclick="SaveChanges"
+                                           Disabled="@(string.IsNullOrWhiteSpace(userDetails.Name) || string.IsNullOrWhiteSpace(userDetails.Surname))">
                                     Save Changes
-                            </MudButton>
+                                </MudButton>
+                            }
                         </MudCardActions>
                     </MudCard>
                 </MudItem>
             </MudGrid>
         </MudTabPanel>
+
         <MudTabPanel Text="Security">
             <MudCard>
                 <MudCardHeader>
@@ -159,6 +228,7 @@
 </AuthorizeView>
 
 @code {
+    private bool isLoaded = false;  
     // User details
     private UserDto oldUserDetails { get; set; } = new();
     private UserDto userDetails { get; set; } = new();
@@ -180,26 +250,34 @@
         {
             new BreadcrumbItem("Account", href: "/Personal/Account")
         });
+    }
 
-        var response = await HttpClient.GetAsync($"api/user/current");
-        if (response.IsSuccessStatusCode)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
         {
-            var responseDto = await response.Content.ReadFromJsonAsync<UserResponseDto>();
-            if (responseDto is not null && responseDto.Succeeded)
+            var response = await HttpClient.GetAsync($"api/user/current");
+            if (response.IsSuccessStatusCode)
             {
-                if (responseDto.User is not null)
+                var responseDto = await response.Content.ReadFromJsonAsync<UserResponseDto>();
+                if (responseDto is not null && responseDto.Succeeded)
                 {
-                    oldUserDetails = new UserDto
-                        {
-                            Name = responseDto.User.Name,
-                            Surname = responseDto.User.Surname,
-                            Role = responseDto.User.Role
-                        };
-                    userDetails = responseDto.User;
-                }
-                else
-                {
-                    Snackbar.Add("Failed to retrieve user details", Severity.Error);
+                    if (responseDto.User is not null)
+                    {
+                        oldUserDetails = new UserDto
+                            {
+                                Name = responseDto.User.Name,
+                                Surname = responseDto.User.Surname,
+                                Role = responseDto.User.Role
+                            };
+                        userDetails = responseDto.User;
+                        isLoaded = true;
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        Snackbar.Add("Failed to retrieve user details", Severity.Error);
+                    }
                 }
             }
         }
