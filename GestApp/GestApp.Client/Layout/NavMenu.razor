@@ -1,6 +1,5 @@
 ﻿@using GestApp.Client.Shared
 @layout MainLayout
-@* @implements IDisposable *@
 
 @inject NavigationManager NavigationManager
 
@@ -15,7 +14,7 @@
     <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Adminstration</MudText>
     <MudNavLink Href="/Administration/Users" Icon="@Icons.Material.Outlined.PersonSearch">Users</MudNavLink>
 
-    <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">App Examples</MudText>
+    @* <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">App Examples</MudText>
     <MudNavLink Href="application/email" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Email">Email</MudNavLink>
     <MudNavLink Href="application/chat" Icon="@Icons.Material.Outlined.Forum">Chat</MudNavLink>
     <MudNavLink Href="application/todo" Icon="@Icons.Custom.Uncategorized.AlertSuccess" Disabled="true">Todo</MudNavLink>
@@ -35,7 +34,7 @@
         <MudNavLink Href="pages/utility/faq" Icon="@Icons.Material.Outlined.InsertDriveFile">Faq</MudNavLink>
         <MudNavLink Href="test" Icon="@Icons.Material.Outlined.InsertDriveFile">Test</MudNavLink>
     </MudNavGroup>
-    <MudNavLink Href="swagger" Icon="@Icons.Material.Outlined.Book" Target="_blank">API </MudNavLink>
+    <MudNavLink Href="swagger" Icon="@Icons.Material.Outlined.Book" Target="_blank">API </MudNavLink> *@
 
 </MudNavMenu>
 
