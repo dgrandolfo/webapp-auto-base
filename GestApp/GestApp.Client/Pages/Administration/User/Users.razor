@@ -13,49 +13,61 @@
 
 <PageTitle>Users</PageTitle>
 
-<MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">Users</MudText>
-<div class="d-flex justify-space-between">
-    <MudFab OnClick="@CreateUser" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Label="Create" DropShadow="false" Class="mb-4" />
-</div>
-<MudDataGrid T="UserDto" Items="@UsersList" SortMode="SortMode.Multiple" Filterable="false" QuickFilter="@_quickFilter"
-             StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
-             ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered="true" Hover="true">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">Users List</MudText>
-        <MudSpacer />
-        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-    </ToolBarContent>
-    <Columns>
-        <PropertyColumn Property="x => x.Name" SortBy="@_sortBy" />
-        <PropertyColumn Property="x => x.Surname" />
-        <PropertyColumn Property="x => x.FiscalCode" Title="Fiscal Code" Editable="false" />
-        <PropertyColumn Property="x => x.Email" Editable="false" />
-        <TemplateColumn Title="Role">
-            <CellTemplate Context="user">
-                @user.Item.Role
-            </CellTemplate>
-            <EditTemplate Context="user">
-                <MudSelect @bind-Value="user.Item.Role" Label="Role" Variant="Variant.Outlined">
-                    @foreach (var role in RolesList)
-                    {
-                        <MudSelectItem Value="@role">@role</MudSelectItem>
-                    }
-                </MudSelect>
-            </EditTemplate>
-        </TemplateColumn>
-        <TemplateColumn StickyRight="true">
-            <CellTemplate Context="user">
-                <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Color="Color.Error" OnClick="@(() => DeleteUserAsync(user.Item))" />
-            </CellTemplate>
-        </TemplateColumn>
-    </Columns>
-    <PagerContent>
-        <MudDataGridPager T="UserDto" />
-    </PagerContent>
-</MudDataGrid>
+@if (!isLoaded)
+{
+    <MudSkeleton Width="100px" Height="32px" Class="mb-4"/>
+
+    <MudSkeleton Width="120px" Height="36px" Class="mb-4"/>
+
+    <MudSkeleton Width="100%" Height="400px"/>
+}
+else
+{
+    <MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">Users</MudText>
+    <div class="d-flex justify-space-between">
+        <MudFab OnClick="@CreateUser" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Label="Create" DropShadow="false" Class="mb-4" />
+    </div>
+    <MudDataGrid T="UserDto" Items="@UsersList" SortMode="SortMode.Multiple" Filterable="false" QuickFilter="@_quickFilter"
+    StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
+    ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.OnRowClick" Bordered="true" Hover="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Users List</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <Columns>
+            <PropertyColumn Property="x => x.Name" SortBy="@_sortBy" />
+            <PropertyColumn Property="x => x.Surname" />
+            <PropertyColumn Property="x => x.FiscalCode" Title="Fiscal Code" Editable="false" />
+            <PropertyColumn Property="x => x.Email" Editable="false" />
+            <TemplateColumn Title="Role">
+                <CellTemplate Context="user">
+                    @user.Item.Role
+                </CellTemplate>
+                <EditTemplate Context="user">
+                    <MudSelect @bind-Value="user.Item.Role" Label="Role" Variant="Variant.Outlined">
+                        @foreach (var role in RolesList)
+                        {
+                            <MudSelectItem Value="@role">@role</MudSelectItem>
+                        }
+                    </MudSelect>
+                </EditTemplate>
+            </TemplateColumn>
+            <TemplateColumn StickyRight="true">
+                <CellTemplate Context="user">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="@Size.Small" Color="Color.Error" OnClick="@(() => DeleteUserAsync(user.Item))" />
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+        <PagerContent>
+            <MudDataGridPager T="UserDto" />
+        </PagerContent>
+    </MudDataGrid>
+}
 
 @code {
+    private bool isLoaded = false;
     private List<UserDto> UsersList = new();
     private string _searchString;
     private bool _sortNameByLength;
@@ -103,8 +115,12 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        UsersList = await GetUsersListAsync();
-        StateHasChanged();
+        if (firstRender)
+        {
+            UsersList = await GetUsersListAsync();
+            isLoaded = true;
+            StateHasChanged();
+        }
     }
 
     private async Task<List<UserDto>> GetUsersListAsync()
@@ -112,14 +128,13 @@
         // Get all users
         var usersList = await HttpClient.GetFromJsonAsync<List<UserDto>>("api/user/all");
         // Get current user
-        var currentUser = await HttpClient.GetFromJsonAsync<UserDto>("api/user/current");
-
-        if (usersList != null && currentUser != null && currentUser.Email != null)
+        var currentUser = await HttpClient.GetFromJsonAsync<UserResponseDto>("api/user/current");
+        Console.WriteLine("Email: " + currentUser.User.Email);
+        if (usersList != null && currentUser != null && currentUser.User != null && currentUser.User.Email != null)
         {
             // Remove current user
-            usersList = usersList.Where(u => u.Email != currentUser.Email).ToList();
-
-            usersList = usersList.OrderByDescending(u => u.CreatedAt).ToList();
+            usersList = usersList.Where(u => u.Email != currentUser.User.Email)
+                            .OrderByDescending(u => u.CreatedAt).ToList();
         }
         else
         {
