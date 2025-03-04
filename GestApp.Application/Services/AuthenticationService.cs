@@ -42,13 +42,6 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <inheritdoc />
-    public async Task<IdentityResult> RegisterAsync(UserCreateDto model)
-    {
-        var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-        return await _userManager.CreateAsync(user, model.Password);
-    }
-
-    /// <inheritdoc />
     public async Task LogoutAsync()
     {
         await _signInManager.SignOutAsync();

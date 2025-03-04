@@ -25,23 +25,6 @@ namespace GestApp.Controllers
         }
 
         /// <summary>
-        /// Registra un nuovo utente.
-        /// </summary>
-        /// <param name="model">I dati necessari per la registrazione dell'utente.</param>
-        /// <returns>Un risultato dell'operazione di registrazione.</returns>
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserCreateDto model)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var result = await _authService.RegisterAsync(model);
-            if (result.Succeeded)
-                return Ok(new { Message = "Utente registrato con successo" });
-            return BadRequest(result.Errors);
-        }
-
-        /// <summary>
         /// Effettua il logout dell'utente corrente.
         /// </summary>
         /// <param name="returnUrl">La URL di ritorno dopo il logout.</param>

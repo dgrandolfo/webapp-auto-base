@@ -51,6 +51,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Add custom services
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IBreadcrumbService, BreadcrumbService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IUserService, UserService>();

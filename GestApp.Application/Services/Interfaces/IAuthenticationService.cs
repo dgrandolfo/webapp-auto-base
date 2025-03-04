@@ -7,12 +7,6 @@ namespace GestApp.Application.Services.Interfaces;
 public interface IAuthenticationService
 {
     /// <summary>
-    /// Registra un nuovo utente basandosi sui dati forniti.
-    /// </summary>
-    /// <param name="model">Il modello di creazione dell'utente.</param>
-    /// <returns>Un <see cref="IdentityResult"/> che indica se l'operazione è andata a buon fine.</returns>
-    Task<IdentityResult> RegisterAsync(UserCreateDto model);
-    /// <summary>
     /// Effettua il logout dell'utente corrente.
     /// </summary>
     /// <returns>Un task che rappresenta l'operazione asincrona di logout.</returns>

@@ -13,39 +13,44 @@ public class UserService : IUserService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IMapper _mapper;
+    private readonly ITransactionService _transactionService;
 
     /// <summary>
     /// Inizializza una nuova istanza di <see cref="UserService"/>.
     /// </summary>
     /// <param name="userManager">Il gestore degli utenti.</param>
     /// <param name="mapper">Il mapper per convertire tra modelli.</param>
-    public UserService(UserManager<ApplicationUser> userManager, IMapper mapper)
+    public UserService(UserManager<ApplicationUser> userManager, IMapper mapper, ITransactionService transactionService)
     {
         _userManager = userManager;
         _mapper = mapper;
+        _transactionService = transactionService;
     }
 
     /// <inheritdoc />
     public async Task<IdentityResult> CreateUserAsync(UserCreateDto userToCreate)
     {
-        userToCreate.FiscalCode = userToCreate.FiscalCode.ToUpper();
-        var appUserToCreate = _mapper.Map<ApplicationUser>(userToCreate);
-        var createResult = await _userManager.CreateAsync(appUserToCreate, userToCreate.Password);
-        if (!createResult.Succeeded)
+        return await _transactionService.ExecuteOperationInTransactionAsync(async () =>
         {
-            return createResult;
-        }
-
-        if (!string.IsNullOrWhiteSpace(userToCreate.Role))
-        {
-            var roleResult = await _userManager.AddToRoleAsync(appUserToCreate, userToCreate.Role);
-            if (!roleResult.Succeeded)
+            userToCreate.FiscalCode = userToCreate.FiscalCode.ToUpper();
+            var appUserToCreate = _mapper.Map<ApplicationUser>(userToCreate);
+            var createResult = await _userManager.CreateAsync(appUserToCreate, userToCreate.Password);
+            if (!createResult.Succeeded)
             {
-                return IdentityResult.Failed(roleResult.Errors.ToArray());
+                return createResult;
             }
-        }
 
-        return IdentityResult.Success;
+            if (!string.IsNullOrWhiteSpace(userToCreate.Role))
+            {
+                var roleResult = await _userManager.AddToRoleAsync(appUserToCreate, userToCreate.Role);
+                if (!roleResult.Succeeded)
+                {
+                    return IdentityResult.Failed(roleResult.Errors.ToArray());
+                }
+            }
+
+            return IdentityResult.Success;
+        });
     }
 
     /// <inheritdoc />
@@ -102,92 +107,98 @@ public class UserService : IUserService
     /// <inheritdoc />
     public async Task<UserResponseDto> UpdateUserAccountAsync(UserAccountUpdateDto updateDto)
     {
-        var user = await _userManager.FindByEmailAsync(updateDto.Email);
-        if (user == null)
+        return await _transactionService.ExecuteOperationInTransactionAsync(async () =>
         {
-            return new UserResponseDto { Succeeded = false, Message = "User not found." };
-        }
-
-        user.Name = updateDto.Name;
-        user.Surname = updateDto.Surname;
-
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            return new UserResponseDto
+            var user = await _userManager.FindByEmailAsync(updateDto.Email);
+            if (user == null)
             {
-                Succeeded = false,
-                Message = string.Join(", ", result.Errors.Select(e => e.Description))
-            };
-        }
+                return new UserResponseDto { Succeeded = false, Message = "User not found." };
+            }
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var userDto = _mapper.Map<UserDto>(user);
-        userDto.Role = roles.FirstOrDefault();
+            user.Name = updateDto.Name;
+            user.Surname = updateDto.Surname;
 
-        return new UserResponseDto { Succeeded = true, User = userDto };
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                return new UserResponseDto
+                {
+                    Succeeded = false,
+                    Message = string.Join(", ", result.Errors.Select(e => e.Description))
+                };
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var userDto = _mapper.Map<UserDto>(user);
+            userDto.Role = roles.FirstOrDefault();
+
+            return new UserResponseDto { Succeeded = true, User = userDto };
+        });
     }
 
     /// <inheritdoc />
     public async Task<UserResponseDto> UpdateUserAsync(UserUpdateDto userToUpdate)
     {
-        var user = await _userManager.FindByEmailAsync(userToUpdate.Email);
-        if (user == null)
+        return await _transactionService.ExecuteOperationInTransactionAsync(async () =>
         {
-            return new UserResponseDto { Succeeded = false, Message = "User not found." };
-        }
-
-        user.Name = userToUpdate.Name;
-        user.Surname = userToUpdate.Surname;
-
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            return new UserResponseDto
+            var user = await _userManager.FindByEmailAsync(userToUpdate.Email);
+            if (user == null)
             {
-                Succeeded = false,
-                Message = string.Join(", ", result.Errors.Select(e => e.Description))
-            };
-        }
-
-        if (!string.IsNullOrWhiteSpace(userToUpdate.Role))
-        {
-            // Rimuovi eventuali ruoli esistenti
-            var currentRoles = await _userManager.GetRolesAsync(user);
-            Console.WriteLine(currentRoles.ToString());
-            if (currentRoles.Any())
-            {
-                var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
-                if (!removeResult.Succeeded)
-                {
-                    return new UserResponseDto
-                    {
-                        Succeeded = false,
-                        Message = string.Join(", ", removeResult.Errors.Select(e => e.Description))
-                    };
-                }
-                Console.WriteLine(removeResult.Succeeded);
+                return new UserResponseDto { Succeeded = false, Message = "User not found." };
             }
 
-            Console.WriteLine(userToUpdate.Role);
-            // Assegna il nuovo ruolo
-            var addResult = await _userManager.AddToRoleAsync(user, userToUpdate.Role);
-            if (!addResult.Succeeded)
+            user.Name = userToUpdate.Name;
+            user.Surname = userToUpdate.Surname;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
             {
                 return new UserResponseDto
                 {
                     Succeeded = false,
-                    Message = string.Join(", ", addResult.Errors.Select(e => e.Description))
+                    Message = string.Join(", ", result.Errors.Select(e => e.Description))
                 };
             }
-            await _userManager.UpdateSecurityStampAsync(user);
-        }
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var userDto = _mapper.Map<UserDto>(user);
-        userDto.Role = roles.FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(userToUpdate.Role))
+            {
+                // Rimuovi eventuali ruoli esistenti
+                var currentRoles = await _userManager.GetRolesAsync(user);
+                Console.WriteLine(currentRoles.ToString());
+                if (currentRoles.Any())
+                {
+                    var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                    if (!removeResult.Succeeded)
+                    {
+                        return new UserResponseDto
+                        {
+                            Succeeded = false,
+                            Message = string.Join(", ", removeResult.Errors.Select(e => e.Description))
+                        };
+                    }
+                    Console.WriteLine(removeResult.Succeeded);
+                }
 
-        return new UserResponseDto { Succeeded = true, User = userDto };
+                Console.WriteLine(userToUpdate.Role);
+                // Assegna il nuovo ruolo
+                var addResult = await _userManager.AddToRoleAsync(user, userToUpdate.Role);
+                if (!addResult.Succeeded)
+                {
+                    return new UserResponseDto
+                    {
+                        Succeeded = false,
+                        Message = string.Join(", ", addResult.Errors.Select(e => e.Description))
+                    };
+                }
+                await _userManager.UpdateSecurityStampAsync(user);
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var userDto = _mapper.Map<UserDto>(user);
+            userDto.Role = roles.FirstOrDefault();
+
+            return new UserResponseDto { Succeeded = true, User = userDto };
+        });
     }
 
 
