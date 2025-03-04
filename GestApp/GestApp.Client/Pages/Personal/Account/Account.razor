@@ -244,7 +244,7 @@
     public string Code { get; set; } = String.Empty;
     public IEnumerable<string> RecoveryCodes { get; set; } = new List<string>();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         BreadcrumbService.SetBreadcrumb(new List<BreadcrumbItem>
         {

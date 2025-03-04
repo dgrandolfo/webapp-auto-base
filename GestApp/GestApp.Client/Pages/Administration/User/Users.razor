@@ -92,31 +92,32 @@
         return false;
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         BreadcrumbService.SetBreadcrumb(new List<BreadcrumbItem>
         {
             new BreadcrumbItem("Dashboard", href: "/"),
             new BreadcrumbItem("Users", href: "/Administration/Users")
         });
+    }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
         UsersList = await GetUsersListAsync();
+        StateHasChanged();
     }
 
     private async Task<List<UserDto>> GetUsersListAsync()
     {
-        // Effettua la chiamata all'API per ottenere la lista di tutti gli utenti
+        // Get all users
         var usersList = await HttpClient.GetFromJsonAsync<List<UserDto>>("api/user/all");
-        // Effettua la chiamata all'API per ottenere l'utente corrente
-        // var currentUser = await HttpClient.GetFromJsonAsync<UserDto>("api/user/current");
+        // Get current user
+        var currentUser = await HttpClient.GetFromJsonAsync<UserDto>("api/user/current");
 
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var email = authState.User.Identity.Name;
-
-        if (usersList != null && email != null)
+        if (usersList != null && currentUser != null && currentUser.Email != null)
         {
             // Remove current user
-            usersList = usersList.Where(u => u.Email != email).ToList();
+            usersList = usersList.Where(u => u.Email != currentUser.Email).ToList();
 
             usersList = usersList.OrderByDescending(u => u.CreatedAt).ToList();
         }
